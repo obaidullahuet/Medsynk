@@ -1,0 +1,54 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: medsynk_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-medsynk_db}
+      POSTGRES_USER: ${DB_USER:-medsynk_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-medsynk_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - medsynk_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-medsynk_user} -d ${DB_NAME:-medsynk_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medsynk_api
+    restart: unless-stopped
+    environment:
+      - DB_NAME=${DB_NAME:-medsynk_db}
+      - USER=${DB_USER:-medsynk_user}
+      - PASSWORD=${DB_PASSWORD:-medsynk_password}
+      - DB_SCHEMA=${DB_SCHEMA:-public}
+      - HOST=postgres
+      - PORT=5432
+      - PYTHONPATH=/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - medsynk_network
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  medsynk_network:
+    driver: bridge

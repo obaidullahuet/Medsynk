@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+/* @layer components {
+	.btn-dropdown-color1 {
+		@apply bg-[#D5F4FE] text-gray-700 focus:ring-blue-400;
+	}
+
+	.add-btn-lg-color {
+		@apply bg-[#40C0E5] text-black focus:ring-blue-400;
+		accent-color: #40c0e5;
+	}
+
+	.add-text-lg-color {
+		@apply text-[#40C0E5];
+	}
+
+	.btn-dropdown-color {
+		@apply bg-[#40C0E5] text-gray-700 focus:ring-blue-400;
+	}
+
+	.btn-dropdown-hover {
+		@apply text-gray-700 focus:ring-blue-400;
+	}
+	.btn-dropdown-hover:hover {
+		background-color: #d5f4fe;
+	}
+} */
+
+.bg-navbar {
+	@apply bg-transparent;
+}
+
+/* ##################### */
+
+/* for lighter color */
+.btn-dropdown-color1 {
+	@apply bg-[#D5F4FE] text-gray-700 focus:ring-blue-400;
+}
+/* .btn-dropdown-color1:hover {
+	@apply bg-[#00abdb] text-black focus:ring-blue-400;
+	accent-color: #40c0e5;
+} */
+
+/* for darker color */
+.add-btn-lg-color {
+	@apply bg-[#40C0E5] text-black focus:ring-blue-400;
+	accent-color: #40c0e5;
+}
+
+.add-btn-lg-color:hover {
+	@apply bg-[#00abdb] text-black focus:ring-blue-400;
+	accent-color: #40c0e5;
+}
+
+.add-text-lg-color {
+	@apply text-[#40C0E5];
+}
+.add-text-lg-color1 {
+	@apply text-[#D5F4FE];
+}
+
+/* Active state background */
+/* for sidebars and navs */
+.btn-dropdown-color {
+	@apply bg-[#40C0E5] text-gray-700 focus:ring-blue-400;
+}
+/* Hover-only background */
+.btn-dropdown-hover {
+	@apply text-gray-700 focus:ring-blue-400;
+}
+.btn-dropdown-hover:hover {
+	background-color: #d5f4fe;
+}
+
+/* ##################### */
+
+/*  Dropdown Menu Colors */
+.dropdown-menu-color {
+	@apply border-gray-200 bg-white;
+}
+.dropdown-item-color {
+	@apply text-gray-700 hover:bg-gray-100;
+}
+
+/*  Search Input Colors */
+.search-input-color {
+	@apply border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-400 focus:ring-green-300;
+}
