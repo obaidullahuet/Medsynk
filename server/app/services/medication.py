@@ -1,4 +1,4 @@
-from app.schema import medication_schema as MedicationSchema
+from app.schema import medication as MedicationSchema
 from sqlalchemy.orm import Session
 from app.models import Medication
 

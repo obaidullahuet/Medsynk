@@ -2,8 +2,8 @@ from fastapi import APIRouter ,Depends,HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from config.database import get_db
-from app.services import doctor_service as DoctorService
-from app.schema import doctor_schema as DoctorSchema
+from app.services import doctor as DoctorService
+from app.schema import doctor as DoctorSchema
 
 router = APIRouter(prefix="/doctor", tags=["Doctor"])
 

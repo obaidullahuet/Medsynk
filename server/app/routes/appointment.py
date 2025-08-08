@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-import app.services.appointment_service as service
+import app.services.appointment as service
 from app.schema.appointment import AppointmentCreate, AppointmentOut, AppointmentUpdate
 from typing import List
 

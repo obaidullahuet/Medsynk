@@ -2,8 +2,8 @@ from fastapi import APIRouter ,Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from config.database import get_db
-from app.services import medication_service as MedicationService
-from app.schema import medication_schema as MedicationSchema
+from app.services import medication as MedicationService
+from app.schema import medication as MedicationSchema
 
 
 

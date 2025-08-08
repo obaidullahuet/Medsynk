@@ -1,5 +1,5 @@
 
-from app.schema import doctor_schema as DoctorSchema
+from app.schema import doctor as DoctorSchema
 from app.models import Doctor
 from sqlalchemy.orm import Session
 
