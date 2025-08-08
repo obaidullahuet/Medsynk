@@ -1,0 +1,18 @@
+# Node modules (Svelte dependencies)
+client/node_modules/
+
+# Environment variables
+client/.env
+server/.env
+
+# Python-related
+server/__pycache__/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+.eggs/
+.env/   
+/server/venv/
