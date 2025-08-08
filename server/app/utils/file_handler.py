@@ -5,7 +5,7 @@ from fastapi import UploadFile
 
 
 
-UPLOAD_DIR = "server/uploads"
+UPLOAD_DIR = "uploads"
 
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)

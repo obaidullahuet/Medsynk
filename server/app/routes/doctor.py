@@ -18,32 +18,50 @@ def create_doctor(
     contact: str = Form(...),
     email: str = Form(...),
     address: str = Form(...),
-    experience: str = Form(...), 
+    experience: Optional[str] = Form(...), 
     about: Optional[str] = Form(None),
     available: Optional[bool] = Form(True),
     profilePhoto: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db)):
-    
-    print(experience)
+    db: Session = Depends(get_db)
+):
+    import json
+
+    print("Raw experience:", experience)
+
+    # Handle file upload
     profilePhotoPath = None
     if profilePhoto:
         profilePhotoPath = save_uploaded_file(profilePhoto)
+
+    # Parse experience JSON string
+    experience_dict = {}
+    if experience:
+        try:
+            experience_dict = json.loads(experience)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
+
+    # Create Pydantic model
     doctor = DoctorSchema.DoctorCreate(
-    name=name,
-    specialty=specialty,
-    contact=contact,
-    email=email,
-    address=address,
-    experience_dict = json.loads(experience),
-    about=about,
-    available=available,
-    profilePhoto=profilePhotoPath
-     )
-    created_doctor = DoctorService.create_doctor(db, doctor)
+        name=name,
+        specialty=specialty,
+        contact=contact,
+        email=email,
+        address=address,
+        experience=experience_dict, 
+        about=about,
+        available=available,
+        profilePhoto=profilePhotoPath
+    )
+
+    print("Doctor object:", doctor)
+
+    # created_doctor = DoctorService.create_doctor(db, doctor)
     return {
         "message": "Doctor Created",
-        "data": created_doctor
+        # "data": created_doctor
     }
+
 
 
 @router.get('/')
