@@ -12,8 +12,8 @@ def create_medication(medication:MedicationSchema.MedicationCreate,db:Session):
     db.refresh(new_medication)
     return new_medication
 
-def get_medication_list(db:Session):
-    return db.query(Medication).all()
+def get_medication_list(skip:int,limit:int,db:Session):
+    return db.query(Medication).offset(skip).limit(limit).all()
 
 def get_medication_by_id(medication_id:int, db:Session):
     return db.query(Medication).filter(Medication.id == medication_id).first()
@@ -30,3 +30,12 @@ def update_medication(medication_id:int, updated_medication:MedicationSchema.Med
         db.refresh(medication)
         return medication
 
+
+def delete_medication(medication_id:int, db:Session):
+    medication=db.query(Medication).filter(Medication.id == medication_id).first()
+    if not medication:
+        return None
+    if medication:
+        db.delete(medication)
+        db.commit()
+        return True 

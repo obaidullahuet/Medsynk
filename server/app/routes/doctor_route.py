@@ -18,8 +18,8 @@ def create_doctor(doctor: DoctorSchema.DoctorCreate, db: Session = Depends(get_d
 
 
 @router.get('/')
-def get_doctor_list(db: Session = Depends(get_db)):
-    doctor_list=DoctorService.get_doctor_list(db)
+def get_doctor_list(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
+    doctor_list=DoctorService.get_doctor_list(skip,limit,db)
     return {
         "message":"Doctors List",
         "data":doctor_list
