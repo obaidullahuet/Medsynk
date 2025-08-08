@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, Text, ForeignKey, Boolean, JSON, DECIMAL
+from sqlalchemy import Column, Integer, String, Date, DateTime, Table, Text, ForeignKey, Boolean, JSON, DECIMAL
 from sqlalchemy.orm import relationship
 from config.database import Base
 from datetime import datetime
@@ -22,6 +22,16 @@ class Patient(Base):
     doctor = relationship("Doctor", back_populates="patients")
 
 # ========== DOCTOR ==========
+
+treatment_doctor_association = Table(
+    "treatment_doctor_association",
+    Base.metadata,
+    Column("treatment_id", Integer, ForeignKey("treatments.id")),
+    Column("doctor_id", Integer, ForeignKey("doctors.id"))
+)
+
+
+
 class Doctor(Base):
     __tablename__ = "doctors"
 
@@ -38,7 +48,7 @@ class Doctor(Base):
 
     patients = relationship("Patient", back_populates="doctor")
     appointments = relationship("Appointment", back_populates="doctor")
-    treatments = relationship("Treatment", secondary="treatment_doctor_association", back_populates="doctors")
+    treatments = relationship("Treatment", secondary=treatment_doctor_association, back_populates="doctors")
 
 # ========== APPOINTMENT ==========
 class Appointment(Base):
@@ -81,15 +91,10 @@ class SurgerySchedule(Base):
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
 
 # ========== TREATMENT ==========
-from sqlalchemy import Table
+# from sqlalchemy import Table
 
 # Association table for many-to-many between Treatment and Doctor
-treatment_doctor_association = Table(
-    "treatment_doctor_association",
-    Base.metadata,
-    Column("treatment_id", Integer, ForeignKey("treatments.id")),
-    Column("doctor_id", Integer, ForeignKey("doctors.id"))
-)
+
 
 class Treatment(Base):
     __tablename__ = "treatments"
@@ -122,40 +127,40 @@ class Review(Base):
     createdAt = Column(DateTime, default=datetime.utcnow)
 
 # ========== PAYMENT ==========
-class Payment(Base):
-    __tablename__ = "payments"
+# class Payment(Base):
+#     __tablename__ = "payments"
 
-    id = Column(Integer, primary_key=True)
-    amount = Column(DECIMAL(10, 2))
-    paidAt = Column(DateTime)
-    method = Column(String(50))
-    status = Column(String(50))
+#     id = Column(Integer, primary_key=True)
+#     amount = Column(DECIMAL(10, 2))
+#     paidAt = Column(DateTime)
+#     method = Column(String(50))
+#     status = Column(String(50))
 
-    patient_id = Column(Integer, ForeignKey("patients.id"))
-    treatment_id = Column(Integer, ForeignKey("treatments.id"), nullable=True)
+#     patient_id = Column(Integer, ForeignKey("patients.id"))
+#     treatment_id = Column(Integer, ForeignKey("treatments.id"), nullable=True)
 
 # ========== MESSAGE ==========
-class Message(Base):
-    __tablename__ = "messages"
+# class Message(Base):
+#     __tablename__ = "messages"
 
-    id = Column(Integer, primary_key=True)
-    content = Column(Text)
-    sentAt = Column(DateTime, default=datetime.utcnow)
-    status = Column(String(50))
-    senderType = Column(String(20))
-    senderId = Column(Integer)
-    receiverType = Column(String(20))
-    receiverId = Column(Integer)
+#     id = Column(Integer, primary_key=True)
+#     content = Column(Text)
+#     sentAt = Column(DateTime, default=datetime.utcnow)
+#     status = Column(String(50))
+#     senderType = Column(String(20))
+#     senderId = Column(Integer)
+#     receiverType = Column(String(20))
+#     receiverId = Column(Integer)
 
 # ========== ADMIN USER ==========
-class AdminUser(Base):
-    __tablename__ = "admin_users"
+# class AdminUser(Base):
+#     __tablename__ = "admin_users"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100))
-    email = Column(String(100), unique=True)
-    role = Column(String(50))
-    passwordHash = Column(String(255))
+#     id = Column(Integer, primary_key=True)
+#     name = Column(String(100))
+#     email = Column(String(100), unique=True)
+#     role = Column(String(50))
+#     passwordHash = Column(String(255))
 
 # ========== MEDICATION ==========
 class Medication(Base):
@@ -185,19 +190,19 @@ class HealthReport(Base):
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
 
 # ========== VITAL STATS ==========
-class VitalStat(Base):
-    __tablename__ = "vital_stats"
+# class VitalStat(Base):
+#     __tablename__ = "vital_stats"
 
-    id = Column(Integer, primary_key=True)
-    temperature = Column(Integer)
-    heart_rate = Column(Integer)
-    blood_pressure_systolic = Column(Integer)
-    blood_pressure_diastolic = Column(Integer)
-    respiratory_rate = Column(Integer)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+#     id = Column(Integer, primary_key=True)
+#     temperature = Column(Integer)
+#     heart_rate = Column(Integer)
+#     blood_pressure_systolic = Column(Integer)
+#     blood_pressure_diastolic = Column(Integer)
+#     respiratory_rate = Column(Integer)
+#     recorded_at = Column(DateTime, default=datetime.utcnow)
 
-    patient_id = Column(Integer, ForeignKey("patients.id"))
-    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
+#     patient_id = Column(Integer, ForeignKey("patients.id"))
+#     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)
+#     appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
 
-    patient = relationship("Patient", backref="vital_stats")
+#     patient = relationship("Patient", backref="vital_stats")

@@ -1,15 +1,44 @@
+import json
+from typing import Optional
 from fastapi import APIRouter ,Depends,HTTPException, Form ,File,UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from config.database import get_db
 from app.services import doctor as DoctorService
 from app.schema import doctor as DoctorSchema
+from app.utils.file_handler import save_uploaded_file
 
 router = APIRouter(prefix="/doctor", tags=["Doctor"])
 
 
 @router.post('/')
-def create_doctor(doctor: DoctorSchema.DoctorCreate, db: Session = Depends(get_db)):
+def create_doctor( 
+    name: str = Form(...),
+    specialty: str = Form(...),
+    contact: str = Form(...),
+    email: str = Form(...),
+    address: str = Form(...),
+    experience: str = Form(...), 
+    about: Optional[str] = Form(None),
+    available: Optional[bool] = Form(True),
+    profilePhoto: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)):
+    
+    print(experience)
+    profilePhotoPath = None
+    if profilePhoto:
+        profilePhotoPath = save_uploaded_file(profilePhoto)
+    doctor = DoctorSchema.DoctorCreate(
+    name=name,
+    specialty=specialty,
+    contact=contact,
+    email=email,
+    address=address,
+    experience_dict = json.loads(experience),
+    about=about,
+    available=available,
+    profilePhoto=profilePhotoPath
+     )
     created_doctor = DoctorService.create_doctor(db, doctor)
     return {
         "message": "Doctor Created",

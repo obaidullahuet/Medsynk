@@ -4,7 +4,7 @@ from app.models import Doctor
 from sqlalchemy.orm import Session
 
 def create_doctor(db:Session,doctor:DoctorSchema.DoctorCreate):
-    new_doctor = Doctor(**doctor.dict())
+    new_doctor = Doctor(**doctor)
     db.add(new_doctor)
     db.commit()
     db.refresh(new_doctor)
