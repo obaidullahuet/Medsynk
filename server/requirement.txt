@@ -7,8 +7,3 @@ python-dotenv
 pydantic[email]
 python-multipart
 jinja2
-<<<<<<< HEAD
-pydantic[email]
-=======
-email-validator
->>>>>>> d0bb2f4b8f571b48e9cc7f35be85086f5b8f1c41

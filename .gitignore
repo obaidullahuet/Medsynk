@@ -6,8 +6,8 @@ client/.env
 server/.env
 server/uploads
 
-server/pycache/
-pycache/
+# Python cache files
+__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
@@ -15,4 +15,26 @@ pycache/
 *.egg-info/
 .eggs/
 .env/
+
+# Virtual environments
 /server/venv/
+venv/
+env/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
