@@ -18,7 +18,7 @@ class Patient(Base):
     medicalRecordNo = Column(String(50), unique=True)
     address = Column(Text)
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
-
+    
     doctor = relationship("Doctor", back_populates="patients")
 
 # ========== DOCTOR ==========
