@@ -10,7 +10,7 @@
 	let selectedTreatment = '';
 	let selectedDate = '';
 	let currentPage = 1;
-	const itemsPerPage = 8;
+	const itemsPerPage = 6;
 
 	//  Filtering Logic
 	$: filteredPatients = patients.filter((p) => {

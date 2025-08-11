@@ -4,9 +4,21 @@
 	import Pagination from '../../components/pagination/Pagination.svelte';
 	import { goto } from '$app/navigation';
 	import { doctors } from '$lib/doctorsData/doctors.js';
-
+	import { onMount } from 'svelte';
+// let doctors = $state([]);
 	let currentPage = $state(1);
 	let itemsPerPage = $state(12);
+	// Fetch doctors from backend
+	// onMount(async () => {
+	// 	try {
+	// 		const res = await fetch('http://localhost:8000/doctors'); // change to your API endpoint
+	// 		if (!res.ok) throw new Error('Failed to fetch doctors');
+	// 		const data = await res.json();
+	// 		doctors = data;
+	// 	} catch (error) {
+	// 		console.error('Error fetching doctors:', error);
+	// 	}
+	// });
 
 	const specializations = [...new Set(doctors.map((d) => d.specialty))];
 	const statuses = [...new Set(doctors.map((d) => d.status))];
@@ -69,11 +81,14 @@
 		on:addDoctor={handleAddDoctor}
 	/>
 	<div class="px-4 py-4">
+
+		{#if totalItems > 0}
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{#each paginatedDoctors as doc}
 				<DoctorDetails {...doc} on:select={goToDoctorDetails} />
 			{/each}
 		</div>
+
 		<Pagination
 			{currentPage}
 			{itemsPerPage}
@@ -81,5 +96,8 @@
 			on:pageChange={handlePageChange}
 			on:itemsPerPageChange={handleItemsPerPageChange}
 		/>
+		{:else}
+		<p class="py-4 text-center text-gray-500">No Doctors found for the applied filters.</p>
+	{/if}
 	</div>
 </div>

@@ -1,0 +1,16 @@
+{
+	"/": [],
+	"/appointments": [],
+	"/doctors": [],
+	"/doctors/[id]": [],
+	"/login": [],
+	"/messages": [],
+	"/patients": [],
+	"/patients/[id]": [],
+	"/payments": [],
+	"/reviews": [],
+	"/signup": [],
+	"/surgery-schedule": [],
+	"/treatments": [],
+	"/treatments/[id]": []
+}

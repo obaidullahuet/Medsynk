@@ -136,6 +136,8 @@
 			avatar: 'https://randomuser.me/api/portraits/women/65.jpg'
 		}
 	];
+	let showAll = $state(false);
+	const rowsToShow = 5; 
 
 	// Patients Table
 	const patients = [
@@ -170,9 +172,83 @@
 			treatment: 'Acne Treatment',
 			report: 'Skin sensitivity noted',
 			status: 'Completed'
+		},
+		{
+			id: 'PB-008',
+			name: 'Claire Thompson',
+			datetime: '2028-09-14, 10:00 AM',
+			treatment: 'Lip Fillers',
+			report: 'Slight swelling observed',
+			status: 'Scheduled'
+		},
+		{
+			id: 'PB-009',
+			name: 'Ethan Hughes',
+			datetime: '2028-09-15, 2:00 PM',
+			treatment: 'Tattoo Removal',
+			report: 'Healing as expected',
+			status: 'InProgress'
+		},
+		{
+			id: 'PB-010',
+			name: 'Hannah Lee',
+			datetime: '2028-09-16, 11:00 AM',
+			treatment: 'Acne Treatment',
+			report: 'Skin sensitivity noted',
+			status: 'Completed'
+		},
+		{
+			id: 'PB-008',
+			name: 'Claire Thompson',
+			datetime: '2028-09-14, 10:00 AM',
+			treatment: 'Lip Fillers',
+			report: 'Slight swelling observed',
+			status: 'Scheduled'
+		},
+		{
+			id: 'PB-009',
+			name: 'Ethan Hughes',
+			datetime: '2028-09-15, 2:00 PM',
+			treatment: 'Tattoo Removal',
+			report: 'Healing as expected',
+			status: 'InProgress'
+		},
+		{
+			id: 'PB-010',
+			name: 'Hannah Lee',
+			datetime: '2028-09-16, 11:00 AM',
+			treatment: 'Acne Treatment',
+			report: 'Skin sensitivity noted',
+			status: 'Completed'
+		},
+		{
+			id: 'PB-008',
+			name: 'Claire Thompson',
+			datetime: '2028-09-14, 10:00 AM',
+			treatment: 'Lip Fillers',
+			report: 'Slight swelling observed',
+			status: 'Scheduled'
+		},
+		{
+			id: 'PB-009',
+			name: 'Ethan Hughes',
+			datetime: '2028-09-15, 2:00 PM',
+			treatment: 'Tattoo Removal',
+			report: 'Healing as expected',
+			status: 'InProgress'
+		},
+		{
+			id: 'PB-010',
+			name: 'Hannah Lee',
+			datetime: '2028-09-16, 11:00 AM',
+			treatment: 'Acne Treatment',
+			report: 'Skin sensitivity noted',
+			status: 'Completed'
 		}
 	];
-
+	let showAllReviews = $state(false);
+	const reviewsToShow = 3;
+	let currentIndex = $state(0);
 	// Reviews
 	const reviews = [
 		{
@@ -192,11 +268,40 @@
 			rating: 5,
 			text: 'Excellent service! The tattoo removal process was smooth and professional.',
 			avatar: 'https://randomuser.me/api/portraits/women/65.jpg'
+		},
+		{
+			name: 'Sarah Miller',
+			rating: 5,
+			text: 'Dr. Olivia is amazing! My skin feels rejuvenated and looks better than ever.',
+			avatar: 'https://randomuser.me/api/portraits/women/65.jpg'
+		},
+		{
+			name: 'Claire Thompson',
+			rating: 4,
+			text: 'Great experience, though some swelling post-treatment. Dr. Grant was very attentive.',
+			avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+		},
+		{
+			name: 'Ethan Hughes',
+			rating: 5,
+			text: 'Excellent service! The tattoo removal process was smooth and professional.',
+			avatar: 'https://randomuser.me/api/portraits/women/65.jpg'
 		}
 	];
+	function prevReview() {
+		if (!showAllReviews) {
+			currentIndex = (currentIndex - 1 + reviews.length) % reviews.length;
+		}
+	}
+
+	function nextReview() {
+		if (!showAllReviews) {
+			currentIndex = (currentIndex + 1) % reviews.length;
+		}
+	}
 </script>
 
-<div class="flex min-h-screen flex-col gap-4 p-2 text-gray-800 sm:gap-6 sm:p-4">
+<div class="flex min-h-screen flex-col gap-4 p-2 text-gray-800 bg-[#f9f5f4] sm:gap-6 sm:p-4">
 	<div class="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-12">
 		<!-- Doctor Profile Sidebar -->
 		<div class="xl:col-span-3">
@@ -213,7 +318,7 @@
 				<div
 					class="flex flex-col md:flex-row md:items-stretch md:divide-x md:divide-gray-300 lg:flex-col lg:divide-x-0"
 				>
-					<!-- 1️⃣ Column 1: Image + Name -->
+					<!-- Column 1: Image + Name -->
 					<div
 						class="flex flex-col items-center md:w-1/3 md:items-start md:pr-4 lg:w-full lg:items-center lg:pr-0"
 					>
@@ -240,7 +345,7 @@
 						</p>
 					</div>
 
-					<!-- 2️⃣ Column 2: About -->
+					<!-- Column 2: About -->
 					<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:px-4 lg:mt-4 lg:w-full lg:px-0">
 						<div class="pt-3">
 							<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
@@ -250,7 +355,7 @@
 						</div>
 					</div>
 
-					<!-- 3️⃣ Column 3: Contact Info -->
+					<!-- Column 3: Contact Info -->
 					<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:pl-4 lg:mt-4 lg:w-full lg:pl-0">
 						<div class="pt-3">
 							<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
@@ -287,7 +392,7 @@
 							Experiences
 						</h3>
 
-						<!-- ✅ Responsive Card Layout -->
+						<!-- Card Layout -->
 						<ul
 							class="mt-2 flex flex-col gap-3 sm:mt-3 md:flex-row md:flex-wrap md:gap-4 lg:flex-col"
 						>
@@ -436,109 +541,120 @@
 				</div>
 			</div>
 
-			<!-- Patients Table -->
-			<div class="w-full overflow-x-auto bg-white p-4 sm:p-6 lg:rounded-2xl lg:p-8 lg:shadow-lg">
-				<!--  Heading + Button Container -->
-				<div class="mb-3 flex items-center justify-between sm:mb-4">
-					<h3 class="text-lg font-bold text-gray-800 sm:text-xl">All Patients</h3>
-					<button
-						class="btn-dropdown-color1 rounded-lg px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:py-1.5 sm:text-sm"
-					>
-						View All
-					</button>
-				</div>
+<!-- Patients Table -->
+<div class="w-full overflow-x-auto bg-white p-4 sm:p-6 lg:rounded-2xl lg:p-8 lg:shadow-lg">
+	<!-- Heading + Button Container -->
+	<div class="mb-3 flex items-center justify-between sm:mb-4">
+		<h3 class="text-lg font-bold text-gray-800 sm:text-xl">All Patients</h3>
+		<button
+			onclick={() => (showAll = !showAll)}
+			class="btn-dropdown-color1 rounded-lg px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:py-1.5 sm:text-sm"
+		>
+			{showAll ? "Show Less" : "View All"}
+		</button>
+	</div>
 
-				<div class="overflow-x-auto">
-					<table class="w-full min-w-[600px] border-collapse text-xs sm:min-w-[700px] sm:text-sm">
-						<thead>
-							<tr class=" text-left text-gray-300">
-								<th class="p-2 sm:p-3">ID</th>
-								<th class="p-2 sm:p-3">Name</th>
-								<th class="p-2 sm:p-3">Date & Time</th>
-								<th class="p-2 sm:p-3">Treatment</th>
-								<th class="p-2 sm:p-3">Report</th>
-								<th class="p-2 sm:p-3">Status</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each patients as p}
-								<tr class="border-t border-gray-200 transition hover:bg-gray-50">
-									<td class="p-2 font-medium sm:p-3">{p.id}</td>
-									<td class="p-2 sm:p-3">{p.name}</td>
-									<td class="p-2 text-gray-600 sm:p-3">{p.datetime}</td>
-									<td class="p-2 sm:p-3">{p.treatment}</td>
-									<td class=" sm:p-3">{p.report}</td>
-									<td class="p-2 sm:p-3">
-										<span
-											class="rounded-xl px-1 py-1 text-xs font-medium sm:px-2 {p.status ===
-											'Completed'
-												? 'bg-green-100 '
-												: p.status === 'Scheduled'
-													? 'bg-yellow-100 '
-													: 'bg-blue-100 '}">{p.status}</span
-										>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			</div>
+	<div class="overflow-x-auto">
+		<table class="w-full min-w-[600px] border-collapse text-xs sm:min-w-[700px] sm:text-sm">
+			<thead>
+				<tr class="text-left text-gray-300">
+					<th class="p-2 sm:p-3">ID</th>
+					<th class="p-2 sm:p-3">Name</th>
+					<th class="p-2 sm:p-3">Date & Time</th>
+					<th class="p-2 sm:p-3">Treatment</th>
+					<th class="p-2 sm:p-3">Report</th>
+					<th class="p-2 sm:p-3">Status</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each (showAll ? patients : patients.slice(0, rowsToShow)) as p}
+					<tr class="border-t border-gray-200 transition hover:bg-gray-50">
+						<td class="p-2 font-medium sm:p-3">{p.id}</td>
+						<td class="p-2 sm:p-3">{p.name}</td>
+						<td class="p-2 text-gray-600 sm:p-3">{p.datetime}</td>
+						<td class="p-2 sm:p-3">{p.treatment}</td>
+						<td class="sm:p-3">{p.report}</td>
+						<td class="p-2 sm:p-3">
+							<span
+								class="rounded-xl px-1 py-1 text-xs font-medium sm:px-2 {p.status === 'Completed'
+									? 'bg-green-100'
+									: p.status === 'Scheduled'
+										? 'bg-yellow-100'
+										: 'bg-blue-100'}"
+							>
+								{p.status}
+							</span>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+</div>
+		<!-- Reviews -->
+<div>
+	<!-- Header Row -->
+	<div class="mb-3 flex items-center justify-between sm:mb-4">
+		<h3 class="text-lg font-bold sm:text-xl">Patient's Reviews</h3>
 
-			<!-- Reviews -->
-			<div>
-				<!--  Header Row: Title (left) | View All + Nav Icons (right) -->
-				<div class="mb-3 flex items-center justify-between sm:mb-4">
-					<h3 class="text-lg font-bold sm:text-xl">Patient's Reviews</h3>
+		<div class="flex items-center gap-2">
+			<!-- View All Button -->
+			<button
+				onclick={() => (showAllReviews = !showAllReviews)}
+				class="btn-dropdown-color1 rounded-lg px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:py-1.5 sm:text-sm"
+			>
+				{showAllReviews ? 'Show Less' : 'View All'}
+			</button>
 
-					<div class="flex items-center gap-2">
-						<!--  View All Button -->
-						<button
-							class="btn-dropdown-color1 rounded-lg px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:py-1.5 sm:text-sm"
-						>
-							View All
-						</button>
+			<!-- Navigation Icons -->
+			<button
+				onclick={prevReview}
+				class="btn-dropdown-color flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 sm:h-8 sm:w-8"
+			>
+				&lt;
+			</button>
+			<button
+				onclick={nextReview}
+				class="btn-dropdown-color flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 sm:h-8 sm:w-8"
+			>
+				&gt;
+			</button>
+		</div>
+	</div>
 
-						<!--  Navigation Icons -->
-						<button
-							class="btn-dropdown-color flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 sm:h-8 sm:w-8"
-						>
-							&lt;
-						</button>
-						<button
-							class="btn-dropdown-color flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 sm:h-8 sm:w-8"
-						>
-							&gt;
-						</button>
-					</div>
-				</div>
-
-				<!--  Reviews Slider -->
-				<div class="flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-					{#each reviews as r}
-						<div class="min-w-[220px] rounded-lg bg-gray-50 p-3 shadow-sm sm:min-w-[250px] sm:p-4">
-							<!--  Top Row: Avatar + Name (left) | Stars (right) -->
-							<div class="mb-2 flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<img
-										src={r.avatar}
-										alt={r.name}
-										class="h-10 w-10 rounded-full shadow-sm ring-1 ring-gray-200 sm:h-12 sm:w-12"
-									/>
-									<h4 class="text-sm font-semibold sm:text-base">{r.name}</h4>
-								</div>
-								<p class="text-sm text-yellow-500 sm:text-base">{'★'.repeat(r.rating)}</p>
-							</div>
-
-							<!--  Divider Line -->
-							<hr class="mb-2 border-gray-200" />
-
-							<!--  Review Text -->
-							<p class="text-xs text-gray-600 sm:text-sm">{r.text}</p>
+	<!-- Reviews Slider -->
+	<div class="flex gap-3 overflow-x-auto pb-2 sm:gap-4">
+		{#if showAllReviews}
+			{#each reviews as r}
+				<div class="min-w-[220px] rounded-lg bg-gray-50 p-3 shadow-sm sm:min-w-[250px] sm:p-4">
+					<div class="mb-2 flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<img src={r.avatar} alt={r.name} class="h-10 w-10 rounded-full shadow-sm ring-1 ring-gray-200 sm:h-12 sm:w-12" />
+							<h4 class="text-sm font-semibold sm:text-base">{r.name}</h4>
 						</div>
-					{/each}
+						<p class="text-sm text-yellow-500 sm:text-base">{'★'.repeat(r.rating)}</p>
+					</div>
+					<hr class="mb-2 border-gray-200" />
+					<p class="text-xs text-gray-600 sm:text-sm">{r.text}</p>
 				</div>
-			</div>
+			{/each}
+		{:else}
+			{#each reviews.slice(currentIndex, currentIndex + reviewsToShow) as r}
+				<div class="min-w-[220px] rounded-lg bg-gray-50 p-3 shadow-sm sm:min-w-[250px] sm:p-4">
+					<div class="mb-2 flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<img src={r.avatar} alt={r.name} class="h-10 w-10 rounded-full shadow-sm ring-1 ring-gray-200 sm:h-12 sm:w-12" />
+							<h4 class="text-sm font-semibold sm:text-base">{r.name}</h4>
+						</div>
+						<p class="text-sm text-yellow-500 sm:text-base">{'★'.repeat(r.rating)}</p>
+					</div>
+					<hr class="mb-2 border-gray-200" />
+					<p class="text-xs text-gray-600 sm:text-sm">{r.text}</p>
+				</div>
+			{/each}
+		{/if}
+	</div>
+</div>
 		</div>
 	</div>
 </div>
