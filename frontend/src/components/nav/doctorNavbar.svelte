@@ -87,7 +87,7 @@
 		<!-- Mobile Search -->
 		<div class="block flex w-full items-center justify-between sm:hidden md:w-auto">
 			<div class="relative w-full max-w-[65%] md:max-w-[55%]">
-				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 					<svg
 						class="h-3 w-3 md:h-2.5 md:w-2.5 lg:h-3.5 lg:w-3.5"
 						fill="none"
@@ -106,14 +106,14 @@
 					type="text"
 					placeholder="Search"
 					oninput={handleSearch}
-					class="search-input-color block w-full rounded-full border py-1 pr-2 pl-7 text-xs focus:outline-none md:py-1 md:pl-7 md:text-[11px] lg:text-sm"
+					class="search-input-color block w-full rounded-full border py-2 pr-4 pl-10 text-xs focus:outline-none md:py-2 md:pl-10 md:text-[11px] lg:text-sm"
 				/>
 			</div>
 
 			<div class="flex gap-1 md:gap-1.5">
 				<button
 					onclick={() => toggleDropdown('specialization')}
-					class="btn-dropdown-color1 flex h-7 w-7 items-center justify-center rounded-full shadow-md md:h-7 md:w-7"
+					class="btn-dropdown-color1 flex h-9 w-9 items-center justify-center rounded-full shadow-md md:h-9 md:w-9"
 				>
 					<svg
 						class="h-3 w-3 md:h-2.5 md:w-2.5 lg:h-4 lg:w-4"
@@ -132,7 +132,7 @@
 
 				<button
 					onclick={openModal}
-					class="btn-dropdown-color1 flex h-7 w-7 items-center justify-center rounded-full shadow-md md:h-7 md:w-7"
+					class="btn-dropdown-color1 flex h-9 w-9 items-center justify-center rounded-full shadow-md md:h-9 md:w-9"
 				>
 					<svg
 						class="h-3 w-3 md:h-2.5 md:w-2.5 lg:h-4 lg:w-4"
@@ -153,18 +153,18 @@
 
 		<!-- Dropdown Filters -->
 		<div
-			class="hidden w-full sm:flex sm:flex-row sm:items-center md:w-auto md:flex-wrap md:gap-1.5 md:text-[11px] lg:gap-3 lg:text-sm"
+			class="hidden w-full sm:flex sm:flex-row sm:items-center md:w-auto md:flex-nowrap md:gap-1.5 md:text-[11px] lg:gap-3 lg:text-sm"
 		>
 			<div class="relative w-full sm:w-auto">
 				<!-- Specialization Dropdown Button -->
 				<button
 					onclick={() => toggleDropdown('specialization')}
-					class="hover:bg-opacity-70 btn-dropdown-color1 flex w-full items-center justify-between rounded-full px-2.5 py-1 text-[11px] sm:w-32 md:text-[11px] lg:w-36 lg:text-sm"
+					class="hover:bg-opacity-70 btn-dropdown-color1 flex w-full items-center justify-between rounded-full px-4 py-2.5 text-[11px] sm:w-40 md:w-28 md:px-2.5 md:py-1.5 lg:w-44 lg:px-4 lg:py-2.5 lg:text-sm"
 				>
-					<span>specialization</span>
+					<span class="md:text-[10px] lg:text-sm">specialization</span>
 
 					<svg
-						class="ml-1 h-3 w-3 md:h-2.5 md:w-2.5 lg:h-4 lg:w-4"
+						class="ml-2 h-3 w-3 md:ml-1 md:h-2.5 md:w-2.5 lg:ml-2 lg:h-4 lg:w-4"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -180,12 +180,12 @@
 
 				{#if showSpecializationDropdown}
 					<div
-						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-40 rounded-md border shadow-lg"
+						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-44 rounded-md border shadow-lg md:w-32 lg:w-44"
 					>
 						{#each ['All', ...specializations] as spec}
 							<button
 								onclick={() => selectSpecialization(spec)}
-								class="dropdown-item-color block w-full px-3 py-1 text-[11px] lg:text-sm"
+								class="dropdown-item-color block w-full px-4 py-2.5 text-[11px] md:px-2.5 md:py-1.5 lg:px-4 lg:py-2.5 lg:text-sm"
 							>
 								{spec}
 							</button>
@@ -198,11 +198,11 @@
 				<!-- Status Dropdown Button -->
 				<button
 					onclick={() => toggleDropdown('status')}
-					class="hover:bg-opacity-70 btn-dropdown-color1 flex w-full items-center justify-between rounded-full px-2.5 py-1 text-[11px] sm:w-24 md:text-[11px] lg:w-28 lg:text-sm"
+					class="hover:bg-opacity-70 btn-dropdown-color1 flex w-full items-center justify-between rounded-full px-4 py-2.5 text-[11px] sm:w-32 md:w-20 md:px-2.5 md:py-1.5 lg:w-36 lg:px-4 lg:py-2.5 lg:text-sm"
 				>
-					<span>status</span>
+					<span class="md:text-[10px] lg:text-sm">status</span>
 					<svg
-						class="ml-1 h-3 w-3 md:h-2.5 md:w-2.5 lg:h-4 lg:w-4"
+						class="ml-2 h-3 w-3 md:ml-1 md:h-2.5 md:w-2.5 lg:ml-2 lg:h-4 lg:w-4"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -218,12 +218,12 @@
 
 				{#if showStatusDropdown}
 					<div
-						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-32 rounded-md border shadow-lg"
+						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-36 rounded-md border shadow-lg md:w-24 lg:w-36"
 					>
 						{#each ['All', ...statuses] as status}
 							<button
 								onclick={() => selectStatus(status)}
-								class="dropdown-item-color block w-full px-3 py-1 text-[11px] lg:text-sm"
+								class="dropdown-item-color block w-full px-4 py-2.5 text-[11px] md:px-2.5 md:py-1.5 lg:px-4 lg:py-2.5 lg:text-sm"
 							>
 								{status}
 							</button>
@@ -235,10 +235,10 @@
 
 		<!-- Desktop Search -->
 		<div
-			class="hidden w-full sm:flex sm:flex-row sm:items-center md:w-auto md:flex-wrap md:gap-1.5 md:text-[11px] lg:gap-3 lg:text-sm"
+			class="hidden w-full sm:flex sm:flex-row sm:items-center md:w-auto md:flex-nowrap md:gap-1.5 md:text-[11px] lg:gap-3 lg:text-sm"
 		>
-			<div class="relative w-full sm:w-48 md:w-44">
-				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+			<div class="relative w-full sm:w-52 md:w-36">
+				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 md:pl-2.5 lg:pl-3">
 					<svg
 						class="h-3 w-3 md:h-2.5 md:w-2.5 lg:h-3.5 lg:w-3.5"
 						fill="none"
@@ -257,16 +257,16 @@
 					type="text"
 					placeholder="Search doctor"
 					oninput={handleSearch}
-					class="search-input-color block w-full rounded-full border py-1 pr-2 pl-7 text-[11px] focus:outline-none md:py-1 md:text-[11px] lg:text-sm"
+					class="search-input-color block w-full rounded-full border py-2.5 pr-4 pl-10 text-[11px] focus:outline-none md:py-1.5 md:pr-3 md:pl-8 md:text-[10px] lg:py-2.5 lg:pr-4 lg:pl-10 lg:text-sm"
 				/>
 			</div>
 
 			<button
-				class="add-btn-lg-color inline-flex items-center justify-center rounded-full px-2 py-1 text-[11px] font-medium whitespace-nowrap focus:outline-none md:min-w-[80px] md:text-[11px] lg:min-w-[90px] lg:text-sm"
+				class="add-btn-lg-color inline-flex items-center justify-center rounded-full px-4 py-2.5 text-[11px] font-medium whitespace-nowrap focus:outline-none md:min-w-[70px] md:px-2.5 md:py-1.5 md:text-[10px] lg:min-w-[110px] lg:px-4 lg:py-2.5 lg:text-sm"
 				onclick={openModal}
 			>
 				<svg
-					class="mr-1 h-3 w-3 md:h-2.5 md:w-2.5 lg:h-4 lg:w-4"
+					class="mr-2 h-3 w-3 md:mr-1 md:h-2.5 md:w-2.5 lg:mr-2 lg:h-4 lg:w-4"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"
@@ -283,7 +283,6 @@
 		</div>
 	</div>
 </div>
-
 <!-- Modal Implementation -->
 {#if showModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">

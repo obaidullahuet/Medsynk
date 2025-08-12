@@ -30,15 +30,22 @@
 	<div class="hidden items-center gap-2 text-sm text-gray-700 sm:flex">
 		<span>Showing</span>
 
-		<select
+		<!-- <select
 			onchange={handleRangeChange}
-			class="btn-dropdown-color1 rounded-full px-3 py-1 text-sm outline-none"
+			class="btn-dropdown-color1 rounded-lg px-1 py-1 text-sm outline-none"
 			bind:value={currentPage}
 		>
 			{#each rangeOptions as option}
 				<option value={option.value}>{option.label}</option>
 			{/each}
-		</select>
+		</select> -->
+<span
+  class="inline-block rounded-full btn-dropdown-color1 px-3 py-1 text-sm font-medium text-blue-800 select-none"
+>
+  {rangeOptions.find(opt => opt.value === currentPage)?.label}
+</span>
+
+
 
 		<span>out of {totalItems}</span>
 	</div>

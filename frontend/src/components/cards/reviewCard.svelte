@@ -26,6 +26,8 @@
 	}
 </script>
 
+
+
 <!-- Delete Confirmation Modal -->
 {#if showConfirmModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -54,9 +56,9 @@
 
 <!-- > Review Card -->
 <div
-	class="flex w-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-[0_4px_20px_#40C0E5] sm:flex-row"
+	class="flex w-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-[0_0_30px_#D5F4FE] lg:flex-row"
 >
-	<div class="flex flex-col gap-2 max-[425px]:block sm:hidden">
+	<div class="flex flex-col gap-2 max-[425px]:block lg:hidden">
 		<!-- Row 1: Checkbox + Date + Archive -->
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-2">
@@ -71,7 +73,7 @@
 			<button
 				class="btn-dropdown-color rounded-full px-3 py-1 text-xs font-semibold text-gray-700 transition hover:opacity-90"
 			>
-				Archive
+				{status}
 			</button>
 		</div>
 		<br />
@@ -105,8 +107,8 @@
 		<p class="my-2 text-sm text-gray-700">{review}</p>
 	</div>
 
-	<!-- > Desktop Layout -->
-	<div class="hidden min-w-0 flex-1 items-start gap-3 sm:flex">
+	
+	<div class="hidden min-w-0 flex-1 items-start gap-3 lg:flex">
 		<div class="flex items-center gap-3">
 			<input
 				type="checkbox"
@@ -128,14 +130,14 @@
 
 	<!-- > Right Section -->
 	<div
-		class="hidden flex-col flex-wrap gap-2 text-right text-sm text-gray-800 sm:flex sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:text-left"
+		class="hidden flex-col flex-wrap gap-2 text-right text-sm text-gray-800 lg:flex lg:flex-row lg:items-center lg:justify-end lg:gap-4 lg:text-left"
 	>
-		<div class="flex flex-col items-end sm:items-start">
+		<div class="flex flex-col items-end lg:items-start">
 			<p class="text-xs text-gray-500">Treatment</p>
-			<p class="max-w-[100px] truncate text-right font-medium sm:text-left">{treatment}</p>
+			<p class="max-w-[100px] truncate text-right font-medium lg:text-left">{treatment}</p>
 		</div>
 
-		<div class="flex items-center justify-end gap-0.5 sm:justify-center">
+		<div class="flex items-center justify-end gap-0.5 lg:justify-center">
 			{#each Array(5) as _, i}
 				<svg
 					class="h-4 w-4"
@@ -152,9 +154,10 @@
 		</div>
 
 		<button
-			class="btn-dropdown-color self-end rounded-full px-4 py-1 text-xs font-semibold text-gray-700 transition hover:opacity-90 sm:self-auto"
+			class="btn-dropdown-color self-end rounded-full px-4 py-1 text-xs font-semibold text-gray-700 transition hover:opacity-90 lg:self-auto"
 		>
 			{status}
 		</button>
 	</div>
 </div>
+
