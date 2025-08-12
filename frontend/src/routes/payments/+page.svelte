@@ -309,5 +309,9 @@
 	{/if}
 
 	<!--  Pagination Component -->
+	  {#if totalItems > 0}
 	<Pagination {totalItems} {itemsPerPage} {currentPage} on:pageChange={handlePageChange} />
+	{:else}
+		<p class="py-4 text-center text-gray-500">No invoices found for the applied filters.</p>
+	{/if}
 </div>

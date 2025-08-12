@@ -63,7 +63,7 @@
 </script>
 
 <div class=" rounded-2xl bg-[#f9f5f4] px-2 py-2">
-	<div class="">
+	
 		<div class="grid grid-cols-1 gap-2 lg:grid-cols-12">
 			<!-- Left Sidebar - Patient Info -->
 			<!-- Patient Profile Card -->
@@ -472,7 +472,7 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	
 </div>
 
 <style>

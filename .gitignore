@@ -1,8 +1,9 @@
 # Node modules (Svelte dependencies)
-client/node_modules/
+frontend/node_modules/
+frontend/.svelte-kit/
 
 # Environment variables
-client/.env
+frontned/.env
 server/.env
 server/uploads
 

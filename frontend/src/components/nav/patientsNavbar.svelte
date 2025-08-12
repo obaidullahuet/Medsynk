@@ -1,5 +1,7 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher,onMount } from 'svelte';
+	import flatpickr from 'flatpickr';
+	import 'flatpickr/dist/flatpickr.min.css';
 	import { patients as patientsData } from '$lib/patientsData/patients';
 	let { searchValue = '' } = $props();
 	let showCustomerDropdown = $state(false);
@@ -46,6 +48,19 @@
 		dispatch('filterTreatment', treatment);
 		showCustomerDropdown = false;
 	}
+
+	// Flatpickr integration
+	onMount(() => {
+		flatpickr(document.getElementById("datepicker"), {
+			dateFormat: "Y-m-d",
+			altInput: true,
+			altFormat: "F j, Y",
+			defaultDate: "today",
+			onChange: (_, dateStr) => {
+				dispatch('filterDate', dateStr);
+			}
+		});
+	});
 </script>
 
 <!--  ORIGINAL NAVBAR -->
@@ -164,26 +179,31 @@
 	</div>
 
 	<div class="flex flex-wrap items-center gap-2">
-		<input
-			type="date"
-			class="btn-dropdown-color1 hidden rounded-full px-2 py-1.5 text-xs md:block lg:px-3 lg:py-2 lg:text-sm"
-			onchange={(e) => dispatch('filterDate', e.target.value)}
-		/>
+	<div class="relative hidden md:block">
+	<input
+		id="datepicker"
+		type="text"
+		placeholder="Select Date"
+		class="btn-dropdown-color1 rounded-full w-32 pr-8 pl-3 py-1.5 text-xs lg:w-40 lg:pr-10 lg:pl-4 lg:py-2 lg:text-sm"
+	/>
+	<svg
+		class="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		viewBox="0 0 24 24"
+	>
+		<path stroke-linecap="round" stroke-linejoin="round"
+			d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 00-2-2h-1V3a1 1 0 00-1-1h-2a1 1 0 00-1 1v2H9V3a1 1 0 00-1-1H6a1 1 0 00-1 1v2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+	</svg>
+</div>
+
+
 		<button
 			class="hidden h-8 w-8 items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 md:flex lg:hidden"
 		>
-			<svg
-				class="h-4 w-4 text-gray-600"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				viewBox="0 0 24 24"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-				/>
+			<svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
 			</svg>
 		</button>
 
