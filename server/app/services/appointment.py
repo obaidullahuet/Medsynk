@@ -2,17 +2,28 @@
 from sqlalchemy.orm import Session
 from app.models import Appointment
 from app.schema.appointment import AppointmentCreate, AppointmentUpdate
+from math import ceil
 
 
-def get_all_appointments(db: Session):
-    return db.query(Appointment).all()
+def getAllAppointmentsService(skip:int,limit:int,db: Session):
+    apptList= db.query(Appointment).offset(skip).lmit(limit).all()
+    totalCount = db.query(Appointment).count()
+    pageNumber = (skip // limit) + 1 if limit else 1
+    totalPages = ceil(totalCount / limit) if limit else 1
+    return {
+        "totalCount": totalCount,
+        "pageNumber": pageNumber,
+        "totalPages": totalPages,
+        "data": apptList,
+    }
 
 
-def get_appointment(db: Session, appointment_id: int):
-    return db.query(Appointment).filter(Appointment.id == appointment_id).first()
+
+def getAppointmentByIdService(db: Session, appointmentId: int):
+    return db.query(Appointment).filter(Appointment.id == appointmentId).first()
 
 
-def create_appointment(db: Session, appointment_data: AppointmentCreate):
+def createAppointmentService(db: Session, appointment_data: AppointmentCreate):
     new_appointment = Appointment(**appointment_data.dict())
     db.add(new_appointment)
     db.commit()
@@ -20,8 +31,8 @@ def create_appointment(db: Session, appointment_data: AppointmentCreate):
     return new_appointment
 
 
-def update_appointment(db: Session, appointment_id: int, update_data: AppointmentUpdate):
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+def updateAppointmentService(db: Session, appointmentId: int, update_data: AppointmentUpdate):
+    appointment = db.query(Appointment).filter(Appointment.id == appointmentId).first()
     if appointment:
         for key, value in update_data.dict(exclude_unset=True).items():
             setattr(appointment, key, value)
@@ -30,8 +41,8 @@ def update_appointment(db: Session, appointment_id: int, update_data: Appointmen
     return appointment
 
 
-def delete_appointment(db: Session, appointment_id: int):
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+def deleteAppointmentService(db: Session, appointmentId: int):
+    appointment = db.query(Appointment).filter(Appointment.id == appointmentId).first()
     if appointment:
         db.delete(appointment)
         db.commit()

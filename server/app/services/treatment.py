@@ -11,6 +11,8 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
         name=treatmentData.name,
         treatmentType=treatmentData.treatmentType,
         description=treatmentData.description,
+        image=treatmentData.image,
+        price=treatmentData.price,
         createdAt=date.today()
     )
 
@@ -42,11 +44,13 @@ def getTreatmentByIdService(db: Session, treatmentId: int):
     return tretamentDetail
 # UPDATE
 def updateTreatmentService(db: Session, treatmentId: int, updateData: TreatmentUpdate):
-    treatment = getTreatmentByIdService(db, treatmentId)
+    treatment = db.query(Treatment).filter(Treatment.id == treatmentId).first()
     if not treatment:
         return None
-    
     for field, value in updateData.dict(exclude_unset=True).items():
+        print(field, value)
+        # if value is None:
+        #     continue
         if field == "doctorIds" and value is not None:
             treatment.doctors.clear()
             doctors = db.query(Doctor).filter(Doctor.id.in_(value)).all()

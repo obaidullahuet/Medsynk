@@ -1,29 +1,35 @@
-# schema/appointment.py
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
+class AppointmentStatus(str, Enum):
+    pending = "pending"
+    completed = "completed"
+    scheduled = "scheduled"
+    cancelled = "cancelled"
+    rescheduled = "rescheduled"
+    in_progress = "in_progress"
 
 class AppointmentBase(BaseModel):
     scheduledAt: datetime
-    status: str
-    notes: Optional[str] = None
-    doctor_id: Optional[int] = None
-    patient_id: Optional[int] = None
-
+    status: AppointmentStatus
+    # notes: Optional[str] = None
+    doctorId: Optional[int] = None
+    patientId: Optional[int] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
 
-
 class AppointmentUpdate(BaseModel):
     scheduledAt: Optional[datetime] = None
-    status: Optional[str] = None
-    notes: Optional[str] = None
-
+    status: Optional[AppointmentStatus] = None
+    # notes: Optional[str] = None
+    doctorId: Optional[int] = None
+    patientId: Optional[int] = None
 
 class AppointmentOut(AppointmentBase):
     id: int
 
     class Config:
-        from_attributes = True
+        form_attribute = True
