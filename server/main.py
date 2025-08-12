@@ -21,4 +21,4 @@ app.add_exception_handler(Exception, generic_exception_handler)
 
 
 # Register Routes
-app.include_router(app_router)
+app.include_router(app_router,prefix='/api')

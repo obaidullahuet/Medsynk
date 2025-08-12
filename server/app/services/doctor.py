@@ -1,17 +1,17 @@
 
-from app.schema import doctor_schema as DoctorSchema
+from app.schema import doctor as DoctorSchema
 from app.models import Doctor
 from sqlalchemy.orm import Session
 
 def create_doctor(db:Session,doctor:DoctorSchema.DoctorCreate):
-    new_doctor = Doctor(**doctor.dict())
+    new_doctor = Doctor(**doctor)
     db.add(new_doctor)
     db.commit()
     db.refresh(new_doctor)
     return new_doctor
 
-def get_doctor_list(db:Session):
-    return db.query(Doctor).all()
+def get_doctor_list(skip:int,limit:int,db:Session):
+    return db.query(Doctor).offset(skip).limit(limit).all()
 
 def get_doctor_by_id(doctor_id:int,db:Session ):
     return db.query(Doctor).filter(Doctor.id == doctor_id).first()
