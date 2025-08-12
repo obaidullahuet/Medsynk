@@ -1,36 +1,47 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
-from app.schema.treatment import TreatmentCreate, TreatmentUpdate, TreatmentOut
-from app.services import treatment
+from app.schema import treatment as TreatmentSchema
+from app.services import treatment as TreatmentService
 
-router = APIRouter(prefix="/treatments", tags=["Treatments"])
 
-@router.post("/", response_model=TreatmentOut)
-def create_treatment(treatment: TreatmentCreate, db: Session = Depends(get_db)):
-    return treatment.create_treatment(db, treatment)
+router = APIRouter(prefix="/treatment", tags=["Treatments"])
 
-@router.get("/", response_model=list[TreatmentOut])
-def get_all_treatments(db: Session = Depends(get_db)):
-    return treatment.get_all_treatments(db)
+@router.post("/",)
+def createTreatment(treatment: TreatmentSchema.TreatmentCreate, db: Session = Depends(get_db)):
+    newTreatemnt=TreatmentService.createTreatmentService(db, treatment)
+    return {
+        "message": "Treatment created successfully",
+        "data": newTreatemnt
+    }
 
-@router.get("/{treatment_id}", response_model=TreatmentOut)
-def get_treatment_by_id(treatment_id: int, db: Session = Depends(get_db)):
-    db_treatment = treatment.get_treatment_by_id(db, treatment_id)
-    if not db_treatment:
+@router.get("/", response_model=TreatmentSchema.PaginatedTreatmentOut)
+def getAllTreatments(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    allTreatment = TreatmentService.getAllTreatmentsService(skip, limit, db)
+    if not allTreatment:
+        raise HTTPException(status_code=404, detail="No Treatments found")
+    return {
+        "message": "All Treatments",
+        **allTreatment
+    }
+
+@router.get("/{id}", )
+def getTreatmentById(id: int, db: Session = Depends(get_db)):
+    dbTreatment = TreatmentService.getTreatmentByIdService(db, id)
+    if not dbTreatment:
         raise HTTPException(status_code=404, detail="Treatment not found")
-    return db_treatment
+    return dbTreatment
 
-@router.put("/{treatment_id}", response_model=TreatmentOut)
-def update_treatment(treatment_id: int, update_data: TreatmentUpdate, db: Session = Depends(get_db)):
-    updated_treatment = treatment.update_treatment(db, treatment_id, update_data)
+@router.put("/{id}")
+def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate, db: Session = Depends(get_db)):
+    updated_treatment = TreatmentService.updateTreatmentService(db, id, update_data)
     if not updated_treatment:
         raise HTTPException(status_code=404, detail="Treatment not found")
     return updated_treatment
 
-@router.delete("/{treatment_id}")
-def delete_treatment(treatment_id: int, db: Session = Depends(get_db)):
-    deleted = treatment.delete_treatment(db, treatment_id)
+@router.delete("/{id}")
+def deleteTreatment(id: int, db: Session = Depends(get_db)):
+    deleted = TreatmentService.deleteTreatmentService(db, id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Treatment not found")
     return {"message": "Treatment deleted successfully"}

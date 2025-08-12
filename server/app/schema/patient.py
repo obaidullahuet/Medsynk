@@ -1,33 +1,39 @@
-from pydantic import BaseModel
-from datetime import date
 from typing import Optional
+from pydantic import BaseModel, EmailStr
+from datetime import date
+from enum import Enum
+
+class GenderEnum(str, Enum):
+    male = "male"
+    female = "female"
+    other = "other"
 
 class PatientBase(BaseModel):
     name: str
+    age: Optional[int] = None  
     dob: date
-    email: str
+    gender: Optional[GenderEnum] = GenderEnum.male 
+    emergencyContact: Optional[str] = None
+    email: EmailStr
     phone: str
-    gender: str
     about: Optional[str] = None
-    emergency_contact: str
-    medicalRecordNo: str
-    address: str
-    doctor_id: Optional[int] = None
+    address: Optional[str] = None
+    createdAt: Optional[date] = None
 
 class PatientCreate(PatientBase):
     pass
 
 class PatientUpdate(BaseModel):
-    name: Optional[str]
-    dob: Optional[date]
-    email: Optional[str]
-    phone: Optional[str]
-    gender: Optional[str]
-    about: Optional[str]
-    emergency_contact: Optional[str]
-    medicalRecordNo: Optional[str]
-    address: Optional[str]
-    doctor_id: Optional[int]
+    name: Optional[str] = None
+    age: Optional[int] = None
+    dob: Optional[date] = None
+    gender: Optional[GenderEnum] = None
+    emergencyContact: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    about: Optional[str] = None
+    address: Optional[str] = None
+    createdAt: Optional[date] = None
 
 class PatientOut(PatientBase):
     id: int

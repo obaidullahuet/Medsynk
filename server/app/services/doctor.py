@@ -2,39 +2,67 @@
 from app.schema import doctor as DoctorSchema
 from app.models import Doctor
 from sqlalchemy.orm import Session
+from math import ceil
 
-def create_doctor(db:Session,doctor:DoctorSchema.DoctorCreate):
-    new_doctor = Doctor(**doctor)
-    db.add(new_doctor)
+
+
+# Create Doctor
+def createDoctor(db:Session,doctor:DoctorSchema.DoctorCreate):
+    newDoctor = Doctor(**doctor.dict())
+    db.add(newDoctor)
     db.commit()
-    db.refresh(new_doctor)
-    return new_doctor
+    db.refresh(newDoctor)
+    return newDoctor
 
-def get_doctor_list(skip:int,limit:int,db:Session):
-    return db.query(Doctor).offset(skip).limit(limit).all()
+# get LIST OF DOCTORS
+def getDoctorList(skip:int,limit:int,db:Session):
 
-def get_doctor_by_id(doctor_id:int,db:Session ):
-    return db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    doctorList= db.query(Doctor).offset(skip).limit(limit).all()
+    totalCount=db.query(Doctor).count()
+    pageNumber = (skip // limit) + 1 if limit else 1
+    totalPages = ceil(totalCount / limit) if limit else 1
+    return {
+        "total": totalCount,
+        "currentPage": pageNumber,
+        "totalPages": totalPages,
+        "data": doctorList,
+    }
 
-def update_doctor(doctor_id:int, updated_doctor:DoctorSchema.DoctorUpdate,db:Session):
+#  GET DOCTOR BY ID
+def getDoctorById(doctorId:int,db:Session ):
+    doctorDetail= db.query(Doctor).filter(Doctor.id == doctorId).first()
+    return doctorDetail
+
+#  UPDATE DOCTOR
+def update_doctor(doctor_id:int, updatedDoctor:DoctorSchema.DoctorUpdate,db:Session):
     doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
     if not doctor:
         return None
     if doctor:
-        update_data = updated_doctor.dict(exclude_unset=True)
-        for key, value in update_data.items():
+        updateData = updatedDoctor.dict(exclude_unset=True)
+        for key, value in updateData.items():
           setattr(doctor, key, value)
         db.commit()
         db.refresh(doctor)
         return doctor
-    
-def delete_doctor(db:Session,doctor_id:int):
-    doctor=db.query(Doctor).filter(Doctor.id == doctor_id).first()
+
+# DELETE DOCTOR 
+def deleteDoctor(db:Session,doctorId:int):
+    doctor=db.query(Doctor).filter(Doctor.id == doctorId).first()
     if not doctor:
-        return None
+     return None
     if doctor:
         db.delete(doctor)
         db.commit()
         return True
     
-
+# UPLOAD IMAGE
+# def update_doctor_image(id:int,photoUrl:str,db:Session):
+#     doctor = db.query(Doctor).filter(Doctor.id == id).first()
+#     if not doctor:
+#         return None
+#     if doctor:
+#         doctor.profilePhoto = photoUrl
+#         db.commit()
+#         db.refresh(doctor)
+#         return doctor
