@@ -1,18 +1,20 @@
 import json
 from typing import Optional
-from fastapi import APIRouter ,Depends,HTTPException, Form ,File,UploadFile
+from fastapi import APIRouter ,Depends,HTTPException, Form ,File,UploadFile,status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from config.database import get_db
 from app.services import doctor as DoctorService
 from app.schema import doctor as DoctorSchema
-from app.utils.file_handler import save_uploaded_file
+from app.utils.fileHandler import saveUploadedFile
+from datetime import date
 
-router = APIRouter(prefix="/doctor", tags=["Doctor"])
+
+router = APIRouter(tags=['Doctor'])
 
 
-@router.post('/')
-def create_doctor( 
+@router.post('/',status_code=status.HTTP_201_CREATED)
+def createDoctor( 
     name: str = Form(...),
     specialty: str = Form(...),
     contact: str = Form(...),
@@ -24,76 +26,123 @@ def create_doctor(
     profilePhoto: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
-    import json
-
-    print("Raw experience:", experience)
-
     # Handle file upload
     profilePhotoPath = None
     if profilePhoto:
-        profilePhotoPath = save_uploaded_file(profilePhoto)
+        profilePhotoPath = saveUploadedFile(profilePhoto)
 
     # Parse experience JSON string
-    experience_dict = {}
+    experienceDict = {}
     if experience:
+        print(experience)
         try:
-            experience_dict = json.loads(experience)
+            experienceDict = json.loads(experience)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
 
-    # Create Pydantic model
     doctor = DoctorSchema.DoctorCreate(
         name=name,
         specialty=specialty,
         contact=contact,
         email=email,
         address=address,
-        experience=experience_dict, 
+        experience=experienceDict,
         about=about,
         available=available,
-        profilePhoto=profilePhotoPath
+        profilePhoto=profilePhotoPath,
+        createdAt=date.today()
     )
 
-    print("Doctor object:", doctor)
-
-    # created_doctor = DoctorService.create_doctor(db, doctor)
+    createdDoctor = DoctorService.createDoctor(db, doctor)
     return {
         "message": "Doctor Created",
-        # "data": created_doctor
+        "data": createdDoctor
     }
 
 
+
+     
 
 @router.get('/')
-def get_doctor_list(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
-    doctor_list=DoctorService.get_doctor_list(skip,limit,db)
-    return {
-        "message":"Doctors List",
-        "data":doctor_list
-    }
+def getDoctorList(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
+        
+        resultData=DoctorService.getDoctorList(skip,limit,db)
+        return {"message":"Doctors List",**resultData}
 
 
 @router.get("/{id}")
-def get_doctor_by_id(id: int, db: Session = Depends(get_db)):
-    doctor = DoctorService.get_doctor_by_id(id,db)
+def getDoctorById(id: int, db: Session = Depends(get_db)):
+    doctor = DoctorService.getDoctorById(id,db)
     if doctor is None:
-        return JSONResponse(status_code=404, content={"message": f"Doctor with ID {id} not found"})
+        return JSONResponse(status_code=404, content={"message": f"Doctor not found"})
     return {
         "message": f"Doctor with ID {id} retrieved successfully",
         "data": doctor
     }
 
 @router.put("/{id}")
-def update_doctor(id: int, updated_data: DoctorSchema.DoctorUpdate, db: Session = Depends(get_db)):
-        doctor = DoctorService.update_doctor(id, updated_data,db)
-        return {
-            "message": f"Doctor with ID {id} updated successfully",
-            "data": doctor
-        }
+def updateDoctor(
+    id: int,
+    name: Optional[str] = Form(None),
+    specialty: Optional[str] = Form(None),
+    contact: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    experience: Optional[str] = Form(None),
+    about: Optional[str] = Form(None),
+    available: Optional[bool] = Form(None),
+    profilePhoto: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+):
+    profilePhotoPath = None
+    if profilePhoto:
+        profilePhotoPath = saveUploadedFile(profilePhoto)
+
+    experienceDict = None
+    if experience is not None:
+        try:
+            experienceDict = json.loads(experience)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
+
+    updateData = {
+        "name": name,
+        "specialty": specialty,
+        "contact": contact,
+        "email": email,
+        "address": address,
+        "experience": experienceDict,
+        "about": about,
+        "available": available,
+        "profilePhoto": profilePhotoPath,
+    }
+    updateData = {k: v for k, v in updateData.items() if v is not None}
+
+    doctorUpdate = DoctorSchema.DoctorUpdate(**updateData)
+
+    updatedDoctor = DoctorService.update_doctor(id, doctorUpdate,db)
+    if not updatedDoctor:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+
+    return {
+        "message": "Doctor updated successfully",
+        "data": updatedDoctor,
+    }
     
 @router.delete("/{id}")
-def delete_doctor(id: int, db: Session = Depends(get_db)):
+def deleteDoctor(id: int, db: Session = Depends(get_db)):
         doctor = DoctorService.delete_doctor(id,db)
         return {
-            "message": f"Doctor with ID {id} deleted successfully"
+            "message": f"Doctor deleted successfully"
         }
+
+
+# @router.put("/image/{id}")
+# def update_doctor_image(id: int, profilePhoto: UploadFile = File(...), db: Session = Depends(get_db)):
+    
+#     profilePhotoPath = save_uploaded_file(profilePhoto)
+#     doctor = DoctorService.update_doctor_image(id, profilePhotoPath, db)
+#     return {
+#         "message": f"Doctor with ID {id} updated successfully",
+#         "data": doctor
+#     }

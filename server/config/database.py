@@ -81,6 +81,9 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base(metadata=default_metadata)
 
+Base.metadata.create_all(bind=engine)
+
+
 # Dependency for DB session
 def get_db():
     db = SessionLocal()

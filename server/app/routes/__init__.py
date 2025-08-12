@@ -8,10 +8,10 @@ from app.routes.treatment import router as treatment_router
 
 router = APIRouter()
 
-router.include_router(patient_router)
-router.include_router(doctor_router)
-router.include_router(appointment_router)
-router.include_router(reviews_router)
-router.include_router(medication_router)
+router.include_router(patient_router, prefix='/patient')
+router.include_router(doctor_router,prefix='/doctor')
+# router.include_router(appointment_router)
+# router.include_router(reviews_router)
+# router.include_router(medication_router)
 router.include_router(treatment_router)
 

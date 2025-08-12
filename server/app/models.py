@@ -1,70 +1,152 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, Table, Text, ForeignKey, Boolean, JSON, DECIMAL
+from sqlalchemy import Column, Integer, String, Date, DateTime, Table, Text, ForeignKey, Boolean, JSON, DECIMAL, Time
 from sqlalchemy.orm import relationship
 from config.database import Base
 from datetime import datetime
+import enum 
+from sqlalchemy import Enum
 
-# ========== PATIENT ==========
-class Patient(Base):
-    __tablename__ = "patients"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100))
-    dob = Column(Date)
-    email = Column(String(100), unique=True)
-    phone = Column(String(15))
-    gender = Column(String(10))
-    about = Column(Text, nullable=True)
-    emergency_contact = Column(String(15))
-    medicalRecordNo = Column(String(50), unique=True)
-    address = Column(Text)
-    doctor_id = Column(Integer, ForeignKey("doctors.id"))
-    
-    doctor = relationship("Doctor", back_populates="patients")
 
 # ========== DOCTOR ==========
 
-treatment_doctor_association = Table(
-    "treatment_doctor_association",
+treatment_doctor=Table(
+    "doctor_treatment_junction",
     Base.metadata,
-    Column("treatment_id", Integer, ForeignKey("treatments.id")),
-    Column("doctor_id", Integer, ForeignKey("doctors.id"))
+    Column("doctorId", Integer, ForeignKey("doctors.id"), primary_key=True),
+    Column("treatmentId", Integer, ForeignKey("treatments.id"), primary_key=True)
 )
-
-
 
 class Doctor(Base):
     __tablename__ = "doctors"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100))
-    specialty = Column(String(100))
-    contact = Column(String(15))
-    profilePhoto = Column(String, nullable=True)
     about = Column(Text, nullable=True)
-    experience = Column(JSON)
+    contact = Column(String(15))
     email = Column(String(100), unique=True)
     address = Column(Text)
-    available = Column(Boolean, default=True)
+    experience = Column(JSON,nullable=True)
+    specialty = Column(String(100),nullable=True)
+    profilePhoto = Column(String, nullable=True)
+    available = Column(Boolean, default=True) 
+    createdAt=Column(Date)
 
-    patients = relationship("Patient", back_populates="doctor")
-    appointments = relationship("Appointment", back_populates="doctor")
-    treatments = relationship("Treatment", secondary=treatment_doctor_association, back_populates="doctors")
+    # availability=relationship("DoctorAvailability", backref="doctor")
+    # appointments = relationship("Appointment", back_populates="doctor")
+    treatments = relationship("Treatment", secondary=treatment_doctor, back_populates="doctors")
+
+# ============= Doctor Availability ========
+class DoctorAvailability(Base):
+    __tablename__ = "doctor_availability"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doctorId = Column(Integer, ForeignKey("doctors.id"))
+    day=Column(String(10))    
+    availableFrom = Column(Time)
+    availableTo=Column(Time)
+    createdAt = Column(Date)
+
+    doctor=relationship("Doctor", backref="availability")
+
+
+
+
+# ========== PATIENT ==========
+
+class gender(enum.Enum):
+    male="male"
+    female="female"
+    other="other"
+
+class Patient(Base):
+    __tablename__ = "patients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100))
+    age = Column(Integer)
+    dob = Column(Date)
+    gender = Column(Enum(gender),default=gender.male) #enum
+    emergencyContact = Column(String(15),nullable=True)
+    email = Column(String(100), unique=True)
+    phone = Column(String(15))
+    about = Column(Text, nullable=True)
+    address = Column(Text,nullable=True)
+    createdAt=Column(Date)
+
+    files=relationship("PatientFile", backref="patient")
+    # appointments=relationship("Appointment", back_populates="patient")
+    medicalInfo=relationship("PatientMedicalInfo", backref="patient")
+
+
+class PatientMedicalInfo(Base):
+    __tablename__ = "patient_medical_info"
+
+    id=Column(Integer, primary_key=True, index=True)
+    patientId = Column(Integer, ForeignKey("patients.id"))
+    bloodGroup = Column(String(5),nullable=True)
+    bodyTempearture = Column(Integer,nullable=True)
+    heartRate = Column(Integer,nullable=True)
+    respirationRate = Column(Integer,nullable=True)
+    bloodPressure = Column(Integer,nullable=True)
+    createdAt=Column(Date)
+
+# ============ Pateint Files ==============
+class PatientFile(Base):
+    __tablename__ = "patient_files"
+
+    id=Column(Integer,primary_key=True,index=True)
+    fileName = Column(String(100))
+    fileUrl = Column(String(255))
+    patientId = Column(Integer, ForeignKey("patients.id"))
+    # Appt_id
+    createdAt=Column(Date)
+
 
 # ========== APPOINTMENT ==========
+class AppointmentStatus(enum.Enum):
+    pending="pending"
+    completed="completed"
+    scheduled="scheduled"
+    cancelled="cancelled"
+    rescheduled="rescheduled"
+    inProgress="in_progress"
+
+
 class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(Integer, primary_key=True, index=True)
     scheduledAt = Column(DateTime)
-    status = Column(String(50))
-    notes = Column(Text)
+    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.pending)
+    doctorId = Column(Integer, ForeignKey("doctors.id"))
+    patientId = Column(Integer, ForeignKey("patients.id"))
 
-    doctor_id = Column(Integer, ForeignKey("doctors.id"))
-    patient_id = Column(Integer, ForeignKey("patients.id"))
+    doctor = relationship("Doctor", backref="appointments")
+    patient = relationship("Patient",backref="appointments")
 
-    doctor = relationship("Doctor", back_populates="appointments")
-    patient = relationship("Patient")
-    treatments = relationship("Treatment", back_populates="appointment")
+# ========== TREATMENT ==========
+
+
+class TreatmentType(enum.Enum):
+    surgical="surgical"
+    non_surgical="non_surgical"
+    other="other"
+
+
+class Treatment(Base):
+    __tablename__ = "treatments"
+
+    id = Column(Integer, primary_key=True)
+    name=Column(String(100))
+    price=Column(Integer,nullable=True)
+    image=Column(String,nullable=True)
+    treatmentType = Column(Enum(TreatmentType),default=TreatmentType.surgical)
+    description = Column(Text, nullable=True)
+    createdAt = Column(Date)
+
+    doctors=relationship("Doctor",secondary=treatment_doctor,back_populates="treatments")
+
+
 
 # ========== SURGERY PERFORMED ==========
 class SurgeryPerformed(Base):
@@ -90,27 +172,6 @@ class SurgerySchedule(Base):
 
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
 
-# ========== TREATMENT ==========
-# from sqlalchemy import Table
-
-# Association table for many-to-many between Treatment and Doctor
-
-
-class Treatment(Base):
-    __tablename__ = "treatments"
-
-    id = Column(Integer, primary_key=True)
-    treatmentType = Column(String(100))
-    about = Column(Text)
-    category = Column(String(100))
-    date = Column(DateTime, default=datetime.utcnow)
-
-    appointment_id = Column(Integer, ForeignKey("appointments.id"))
-    patient_id = Column(Integer, ForeignKey("patients.id"))
-
-    appointment = relationship("Appointment", back_populates="treatments")
-    patient = relationship("Patient")
-    doctors = relationship("Doctor", secondary=treatment_doctor_association, back_populates="treatments")
 
 # ========== REVIEW ==========
 class Review(Base):
