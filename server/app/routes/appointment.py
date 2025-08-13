@@ -10,15 +10,15 @@ router = APIRouter(prefix="/appointment", tags=["Appointments"])
 
 
 @router.get("/",)
-def getAllAppointments(db: Session = Depends(get_db)):
-    apptList= AppointmentService.getAllAppointmentsService(db)
+def getAllAppointments(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
+    apptList= AppointmentService.getAllAppointmentsService(skip,limit,db)
     return {
         "message": "All Appointments",
         "data": apptList
     }
 
 
-@router.get("/{id}}")
+@router.get("/{id}")
 def getAppointment(id: int, db: Session = Depends(get_db)):
     appointment = AppointmentService.getAppointmentByIdService(db,id)
     if not appointment:

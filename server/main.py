@@ -5,6 +5,9 @@ from app.routes import router as app_router
 from sqlalchemy.exc import IntegrityError
 from app.utils.errorHandler import handle_integrity_error,generic_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+UPLOAD_DIR = "uploads"
 
 
 app = FastAPI(
@@ -12,6 +15,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 # Creation of the Tables in the Database 

@@ -13,6 +13,7 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
         description=treatmentData.description,
         image=treatmentData.image,
         price=treatmentData.price,
+        about=treatmentData.about,
         createdAt=date.today()
     )
 
@@ -26,7 +27,7 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
     return treatment
 
 # READ ALL
-def getAllTreatmentsService(skip: int, limit: int, db: Session):
+def getAllTreatmentsService(skip: int, limit: int,filter: str, db: Session):
     treatmentList = db.query(Treatment).offset(skip).limit(limit).all()
     totalCount = db.query(Treatment).count()
     pageNumber = (skip // limit) + 1 if limit else 1

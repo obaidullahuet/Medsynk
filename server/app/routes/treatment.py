@@ -25,6 +25,7 @@ def create_treatment(
     image: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
+    # print(treatment)
     treatment.image = saveUploadedFile(image) if image else None
     new_treatment = TreatmentService.createTreatmentService(db, treatment)
     return {
@@ -33,8 +34,8 @@ def create_treatment(
     }
 #  response_model=TreatmentSchema.PaginatedTreatmentOut
 @router.get("/",)
-def getAllTreatments(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    allTreatment = TreatmentService.getAllTreatmentsService(skip, limit, db)
+def getAllTreatments(skip: int = 0, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
+    allTreatment = TreatmentService.getAllTreatmentsService(skip, limit,filter, db)
     if not allTreatment:
         raise HTTPException(status_code=404, detail="No Treatments found")
     return {
@@ -50,8 +51,12 @@ def getTreatmentById(id: int, db: Session = Depends(get_db)):
     return dbTreatment
 
 @router.put("/{id}")
-def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depends(TreatmentSchema.updateTreatmentDependency), db: Session = Depends(get_db)):
+def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depends(TreatmentSchema.updateTreatmentDependency),    image: UploadFile = File(None), db: Session = Depends(get_db)):
     print(update_data)
+    if image:
+        update_data.image = saveUploadedFile(image)
+    else:
+        update_data.image = None
     updated_treatment = TreatmentService.updateTreatmentService(db, id, update_data)
     if not updated_treatment:
         raise HTTPException(status_code=404, detail="Treatment not found")

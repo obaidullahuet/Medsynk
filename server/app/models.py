@@ -84,13 +84,17 @@ class PatientMedicalInfo(Base):
     id=Column(Integer, primary_key=True, index=True)
     patientId = Column(Integer, ForeignKey("patients.id"))
     bloodGroup = Column(String(5),nullable=True)
-    bodyTempearture = Column(Integer,nullable=True)
-    heartRate = Column(Integer,nullable=True)
-    respirationRate = Column(Integer,nullable=True)
-    bloodPressure = Column(Integer,nullable=True)
+    bodyTemperature = Column(String,nullable=True)
+    heartRate = Column(String,nullable=True)
+    respirationRate = Column(String,nullable=True)
+    bloodPressure = Column(String,nullable=True)
     createdAt=Column(Date)
 
-# ============ Pateint Files ==============
+    appointmentId=Column(Integer, ForeignKey("appointments.id"))
+
+    appointment=relationship("Appointment", backref="medicalInfo")
+
+# ============ Patient Files ==============
 class PatientFile(Base):
     __tablename__ = "patient_files"
 
@@ -141,6 +145,7 @@ class Treatment(Base):
     price=Column(Integer,nullable=True)
     image=Column(String,nullable=True)
     treatmentType = Column(Enum(TreatmentType),default=TreatmentType.surgical)
+    about=Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     createdAt = Column(Date)
 

@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from app.models import Appointment
 from app.schema.appointment import AppointmentCreate, AppointmentUpdate
 from math import ceil
+from sqlalchemy.orm import joinedload
 
 
 def getAllAppointmentsService(skip:int,limit:int,db: Session):
-    apptList= db.query(Appointment).offset(skip).lmit(limit).all()
+    apptList= db.query(Appointment).offset(skip).limit(limit).all()
     totalCount = db.query(Appointment).count()
     pageNumber = (skip // limit) + 1 if limit else 1
     totalPages = ceil(totalCount / limit) if limit else 1
@@ -20,7 +21,7 @@ def getAllAppointmentsService(skip:int,limit:int,db: Session):
 
 
 def getAppointmentByIdService(db: Session, appointmentId: int):
-    return db.query(Appointment).filter(Appointment.id == appointmentId).first()
+    return db.query(Appointment).options(joinedload(Appointment.patient), joinedload(Appointment.doctor)).filter(Appointment.id == appointmentId).first()
 
 
 def createAppointmentService(db: Session, appointment_data: AppointmentCreate):
