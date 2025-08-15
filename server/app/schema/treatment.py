@@ -27,7 +27,7 @@ class TreatmentUpdate(BaseModel):
     name: Optional[str]=None
     treatmentType: Optional[TreatmentType]=None
     about:Optional[str]=None
-    description: Optional[dict]=None
+    description: Optional[str]=None
     createdAt: Optional[date]=None 
     doctorIds: Optional[List[int]]=None
     image: Optional[str]=Form(None)
@@ -88,7 +88,7 @@ def updateTreatmentDependency(
         name=name,
         about=about,
         treatmentType=treatmentType,
-        description=json.loads(description) if description else None,
+        description=description if description else None,
         createdAt=createdAt,
         doctorIds=json.loads(doctorIds) if doctorIds else None,
         price=price

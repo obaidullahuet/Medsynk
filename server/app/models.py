@@ -29,7 +29,9 @@ class Doctor(Base):
     specialty = Column(String(100),nullable=True)
     profilePhoto = Column(String, nullable=True)
     available = Column(Boolean, default=True) 
+    slotDuration = Column(Integer, default=15)
     createdAt=Column(Date)
+
 
     # availability=relationship("DoctorAvailability", backref="doctor")
     # appointments = relationship("Appointment", back_populates="doctor")
@@ -42,8 +44,8 @@ class DoctorAvailability(Base):
     id = Column(Integer, primary_key=True, index=True)
     doctorId = Column(Integer, ForeignKey("doctors.id"))
     day=Column(String(10))    
-    availableFrom = Column(Time)
-    availableTo=Column(Time)
+    startTime = Column(Time)
+    endTime=Column(Time)
     createdAt = Column(Date)
 
     doctor=relationship("Doctor", backref="availability")
@@ -71,6 +73,7 @@ class Patient(Base):
     phone = Column(String(15))
     about = Column(Text, nullable=True)
     address = Column(Text,nullable=True)
+    image=Column(String, nullable=True)
     createdAt=Column(Date)
 
     files=relationship("PatientFile", backref="patient")
