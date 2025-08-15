@@ -1,4 +1,4 @@
-from datetime import datetime,date
+from datetime import datetime,time
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -7,8 +7,8 @@ from typing import List, Optional
 class DoctorAvailabilityBase(BaseModel):
     doctorId:int
     day:str
-    startTime:date
-    endTime:date
+    startTime:time
+    endTime:time
     createdAt: Optional[datetime] = None
 
 
@@ -24,6 +24,6 @@ class DoctorAvailabilityOut(DoctorAvailabilityBase):
 class DoctorAvailabilityUpdate(BaseModel):
     doctorId: Optional[int] = None
     day: Optional[str] = None
-    startTime: Optional[date] = None
-    endTime: Optional[date] = None
+    startTime: Optional[time] = None
+    endTime: Optional[time] = None
     createdAt: Optional[datetime] = None

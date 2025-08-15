@@ -13,7 +13,7 @@ class AppointmentStatus(str, Enum):
 
 class AppointmentBase(BaseModel):
     scheduledAt: datetime
-    status: AppointmentStatus
+    status: AppointmentStatus = AppointmentStatus.scheduled
     # notes: Optional[str] = None
     doctorId: Optional[int] = None
     patientId: Optional[int] = None

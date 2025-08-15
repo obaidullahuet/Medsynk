@@ -1,9 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from app.models import DoctorAvailability
 from config.database import get_db
 from fastapi import Depends
 from app.schema import doctor_availability as DoctorAvailabilitySchema
+from app.services import doctor_availabiliy as DoctorAvailabilityService
 
 
 router=APIRouter(tags=["Doctor Availability"])
@@ -12,73 +13,73 @@ router=APIRouter(tags=["Doctor Availability"])
 # ========================== POST ==================================
 @router.post('/add')
 def addDoctorAvailability(availability:DoctorAvailabilitySchema.createDoctorAvailability,db: Session = Depends(get_db)):
+    newAvailability=DoctorAvailabilityService.createDoctorAvailability(availability, db)
 
+    if "error" in newAvailability:
+
+      if newAvailability["error"] == "doctor_not_found":
+        raise HTTPException(status_code=404, detail="Doctor not found")
+      if newAvailability["error"] == "availability_exists":
+        raise HTTPException(status_code=400, detail="Availability already exists")
+    
     return {
-        "message": "Doctor availability added successfully",
-        "data": availability
-    }
+    "message": "Doctor availability added successfully",
+    "data": newAvailability["data"]
+     }
+
 
 # ========================== GET ==================================
 @router.get('/doctor/{id}')
 def getDoctorAvailabilityByDoctorId(id:int, db: Session = Depends(get_db)):
-    # doctorAvailability = db.query(DoctorAvailability).filter(DoctorAvailability.doctorId == id).all()
-    # if not doctorAvailability:
-    #     return {
-    #         "message": "No availability found for this doctor",
-    #         "data": []
-    #     }
+    doctorAvailability=DoctorAvailabilityService.getDoctorAvailabilityByDoctorId(id,db)
+    if not doctorAvailability:
+        return {
+            "message": "No availability found for this doctor",
+            "data": []
+        }
     return {
         "message": "Doctor availability retrieved successfully",
-        # "data": doctorAvailability
+        "data": doctorAvailability
     }
 
 @router.get('/{id}')
 def getDoctorAvailability(id:int,db: Session = Depends(get_db)):
-    # doctorAvailability = db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()
-    # if not doctorAvailability:
-    #     return {
-    #         "message": "Doctor availability not found",
-    #         "data": None
-    #     }
+    availabilityDetail=DoctorAvailabilityService.getDoctorAvailabilityById(id, db)
+    if not availabilityDetail:
+        return {
+            "message": "Doctor availability not found",
+            "data": None
+        }
     return {
         "message": "Doctor availability retrieved successfully",
-        # "data": doctorAvailability
+        "data": availabilityDetail
     }
 
 # ========================== PUT & DELETE ==================================
 
 @router.put('/update/{id}')
 def updateDoctorAvailability(id: int, availability: DoctorAvailabilitySchema.DoctorAvailabilityUpdate, db: Session = Depends(get_db)):
-    # doctorAvailability = db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()
-    # if not doctorAvailability:
-    #     return {
-    #         "message": "Doctor availability not found",
-    #         "data": None
-    #     }
-    
-    # for key, value in availability.dict().items():
-    #     setattr(doctorAvailability, key, value)
-    
-    # db.commit()
-    
+    updatedRecord=DoctorAvailabilityService.updateDoctorAvailability(id, availability, db)
+    if not updatedRecord:
+        return {
+            "message": "Doctor availability not found",
+            "data": None
+        }
     return {
         "message": "Doctor availability updated successfully",
-        # "data": doctorAvailability
+        "data": updatedRecord
     }
 
 @router.delete('/delete/{id}')
 def deleteDoctorAvailability(id: int, db: Session = Depends(get_db)):
-    # doctorAvailability = db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()
-    # if not doctorAvailability:
-    #     return {
-    #         "message": "Doctor availability not found",
-    #         "data": None
-    #     }
+    doctorAvailability=DoctorAvailabilityService.deleteDoctorAvailability(id, db)
+    if not doctorAvailability:
+        return {
+            "message": "Doctor availability not found",
+            "data": None
+        }
     
-    # db.delete(doctorAvailability)
-    # db.commit()
-    
+   
     return {
         "message": "Doctor availability deleted successfully",
-        # "data": None
     }

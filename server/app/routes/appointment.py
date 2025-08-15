@@ -31,7 +31,10 @@ def getAppointment(id: int, db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_appointment(appointment:AppointmentSchema.AppointmentCreate , db: Session = Depends(get_db)):
+
     newAppt= AppointmentService.createAppointmentService(db, appointment)
+    if "error" in newAppt:
+        raise HTTPException(status_code=400, detail=newAppt["error"])
     return {
         "message": "Appointment created successfully",
         "data": newAppt
