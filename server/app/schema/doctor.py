@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import List, Optional, Dict
 from pydantic import BaseModel, EmailStr
 from datetime import date
 
@@ -8,7 +8,8 @@ class DoctorBase(BaseModel):
     contact: str
     profilePhoto: Optional[str] = None
     about: Optional[str] = None
-    experience: Optional[Dict] = None
+    experience: Optional[List[Dict]] = None
+    slotDuration: Optional[int] = None
     email: EmailStr
     address: str
     available: Optional[bool] = True
@@ -29,7 +30,8 @@ class DoctorUpdate(BaseModel):
     contact: Optional[str] = None
     profilePhoto: Optional[str] = None
     about: Optional[str] = None
-    experience: Optional[Dict] = None
+    experience: Optional[List[Dict]] = None
+    slotDuration: Optional[int] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None
     available: Optional[bool] = None

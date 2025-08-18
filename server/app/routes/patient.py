@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status,File,UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app.schema.patient import PatientCreate, PatientOut, PatientUpdate
+from app.schema import patient as patientSchema
 from config.database import get_db
 from app.services import patient as patientService
+from app.utils import fileHandler
 
 router = APIRouter(tags=["Patient"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def createPatient(patientData: PatientCreate, db: Session = Depends(get_db)):
+def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchema.patientFormDependency) 
+                  ,image:UploadFile=File(None),
+                   db: Session = Depends(get_db)):
+    if image:
+        patientData.image = fileHandler.saveUploadedFile(image)
     newPatient = patientService.createPatientService(db, patientData)
     return {
         "message": "Patient Created",
@@ -34,7 +39,12 @@ def getPatient(id: int, db: Session = Depends(get_db)):
     }
 
 @router.put("/{id}")
-def updatePatient(id: int, patientUpdate: PatientUpdate, db: Session = Depends(get_db)):
+def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(patientSchema.updatePatientDependency)
+                  ,image:UploadFile=File(None),
+                    db: Session = Depends(get_db)):
+    if image and isinstance(image, UploadFile):
+        patientUpdate.image = fileHandler.saveUploadedFile(image)
+
     updatedPatient = patientService.updatePatientService(db, id, patientUpdate)
     return {
         "message": "Patient Updated",

@@ -23,14 +23,17 @@ def createDoctor(
     experience: Optional[str] = Form(...), 
     about: Optional[str] = Form(None),
     available: Optional[bool] = Form(True),
+    slotDuration: Optional[int] = Form(None),
     profilePhoto: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     # Handle file upload
+    print(profilePhoto)
     profilePhotoPath = None
-    if profilePhoto:
+    if profilePhoto and profilePhoto!='':
         profilePhotoPath = saveUploadedFile(profilePhoto)
-
+    if slotDuration is None or slotDuration==0:
+        slotDuration = 15
     # Parse experience JSON string
     experienceDict = {}
     if experience:
@@ -48,6 +51,7 @@ def createDoctor(
         address=address,
         experience=experienceDict,
         about=about,
+        slotDuration=slotDuration,
         available=available,
         profilePhoto=profilePhotoPath,
         createdAt=date.today()
@@ -90,12 +94,13 @@ def updateDoctor(
     address: Optional[str] = Form(None),
     experience: Optional[str] = Form(None),
     about: Optional[str] = Form(None),
+    slotDuration: Optional[int] = Form(None),
     available: Optional[bool] = Form(None),
     profilePhoto: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
 ):
     profilePhotoPath = None
-    if profilePhoto:
+    if profilePhoto and  isinstance(profilePhoto,UploadFile):
         profilePhotoPath = saveUploadedFile(profilePhoto)
 
     experienceDict = None
@@ -104,7 +109,7 @@ def updateDoctor(
             experienceDict = json.loads(experience)
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
-
+   
     updateData = {
         "name": name,
         "specialty": specialty,
@@ -115,6 +120,7 @@ def updateDoctor(
         "about": about,
         "available": available,
         "profilePhoto": profilePhotoPath,
+        "slotDuration": slotDuration,
     }
     updateData = {k: v for k, v in updateData.items() if v is not None}
 
@@ -131,7 +137,7 @@ def updateDoctor(
     
 @router.delete("/{id}")
 def deleteDoctor(id: int, db: Session = Depends(get_db)):
-        doctor = DoctorService.delete_doctor(id,db)
+        doctor = DoctorService.deleteDoctor(id,db)
         return {
             "message": f"Doctor deleted successfully"
         }

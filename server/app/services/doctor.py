@@ -40,14 +40,16 @@ def update_doctor(doctor_id:int, updatedDoctor:DoctorSchema.DoctorUpdate,db:Sess
         return None
     if doctor:
         updateData = updatedDoctor.dict(exclude_unset=True)
-        for key, value in updateData.items():
+        if "slotDuration" not in updateData or updateData.get("slotDuration") is None:
+           updateData["slotDuration"] = 15
+        for key, value in updateData.items():              
           setattr(doctor, key, value)
         db.commit()
         db.refresh(doctor)
         return doctor
 
 # DELETE DOCTOR 
-def deleteDoctor(db:Session,doctorId:int):
+def deleteDoctor(doctorId:int,db:Session,):
     doctor=db.query(Doctor).filter(Doctor.id == doctorId).first()
     if not doctor:
      return None
