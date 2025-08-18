@@ -68,9 +68,9 @@ def createDoctor(
      
 
 @router.get('/')
-def getDoctorList(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
+def getDoctorList(page:int=1,limit:int=10,db: Session = Depends(get_db)):
         
-        resultData=DoctorService.getDoctorList(skip,limit,db)
+        resultData=DoctorService.getDoctorList(page,limit,db)
         return {"message":"Doctors List",**resultData}
 
 

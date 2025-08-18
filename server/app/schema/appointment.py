@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field, validator
-from datetime import date, datetime,time
+from datetime import date,time
 from typing import List, Optional
 from enum import Enum
-
-from sqlalchemy import Time
 
 class AppointmentStatus(str, Enum):
     pending = "pending"

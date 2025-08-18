@@ -27,7 +27,8 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
     return treatment
 
 # READ ALL
-def getAllTreatmentsService(skip: int, limit: int,filter: str, db: Session):
+def getAllTreatmentsService(page: int, limit: int,filter: str, db: Session):
+    skip = (page - 1) * limit
     treatmentList = db.query(Treatment).offset(skip).limit(limit).all()
     totalCount = db.query(Treatment).count()
     pageNumber = (skip // limit) + 1 if limit else 1

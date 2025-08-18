@@ -15,8 +15,8 @@ def createDoctor(db:Session,doctor:DoctorSchema.DoctorCreate):
     return newDoctor
 
 # get LIST OF DOCTORS
-def getDoctorList(skip:int,limit:int,db:Session):
-
+def getDoctorList(page:int,limit:int,db:Session):
+    skip = (page - 1) * limit
     doctorList= db.query(Doctor).offset(skip).limit(limit).all()
     totalCount=db.query(Doctor).count()
     pageNumber = (skip // limit) + 1 if limit else 1
