@@ -21,8 +21,8 @@ def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchem
     }
 
 @router.get("/")
-def getPatients(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    patientsData = patientService.getPatientList(skip, limit, db)
+def getPatients(page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+    patientsData = patientService.getPatientList(page, limit, db)
     return {
         "message": "Patients List",
         **patientsData

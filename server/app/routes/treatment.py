@@ -34,8 +34,8 @@ def create_treatment(
     }
 #  response_model=TreatmentSchema.PaginatedTreatmentOut
 @router.get("/",)
-def getAllTreatments(skip: int = 0, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
-    allTreatment = TreatmentService.getAllTreatmentsService(skip, limit,filter, db)
+def getAllTreatments(page: int = 1, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
+    allTreatment = TreatmentService.getAllTreatmentsService(page, limit,filter, db)
     if not allTreatment:
         raise HTTPException(status_code=404, detail="No Treatments found")
     return {

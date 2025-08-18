@@ -10,8 +10,8 @@ router = APIRouter(prefix="/appointment", tags=["Appointments"])
 
 
 @router.get("/",response_model=AppointmentSchema.PaginatedAppointmentOut)
-def getAllAppointments(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
-    apptList= AppointmentService.getAllAppointmentsService(skip,limit,db)
+def getAllAppointments(page:int=1,limit:int=10,db: Session = Depends(get_db)):
+    apptList= AppointmentService.getAllAppointmentsService(page,limit,db)
     return {
         "message": "All Appointments",
         "data": apptList
@@ -44,13 +44,12 @@ def create_appointment(appointment:AppointmentSchema.AppointmentCreate , db: Ses
 @router.put("/{id}")
 def update_appointment(id: int, appointment_update: AppointmentSchema.AppointmentUpdate, db: Session = Depends(get_db)):
     updated = AppointmentService.updateAppointmentService(db, id, appointment_update)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    if "error" in updated:
+        raise HTTPException(status_code=400, detail=updated["error"])
     return {
-        "message": "Appointment updated successfully",
-        "data": updated
+        "message": "Appointment created successfully",
+        "data": updated["data"]
     }
-
 
 @router.delete("/{id}")
 def delete_appointment(id: int, db: Session = Depends(get_db)):

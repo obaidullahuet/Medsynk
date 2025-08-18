@@ -45,7 +45,8 @@ def deletePatientService(db: Session, patientId: int):
 
 # ========================= Get Patient List Service ===========
 
-def getPatientList(skip: int, limit: int, db: Session):
+def getPatientList(page: int, limit: int, db: Session):
+    skip = (page - 1) * limit
     patientList = db.query(Patient).offset(skip).limit(limit).all()
     totalCount = db.query(Patient).count()
     pageNumber = (skip // limit) + 1 if limit else 1
