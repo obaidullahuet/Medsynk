@@ -42,7 +42,7 @@ class DoctorAvailability(Base):
     __tablename__ = "doctor_availability"
 
     id = Column(Integer, primary_key=True, index=True)
-    doctorId = Column(Integer, ForeignKey("doctors.id"))
+    doctorId = Column(Integer, ForeignKey("doctors.id",ondelete='CASCADE'),nullable=True)
     day=Column(String(10))    
     startTime = Column(Time)
     endTime=Column(Time)
@@ -85,15 +85,18 @@ class PatientMedicalInfo(Base):
     __tablename__ = "patient_medical_info"
 
     id=Column(Integer, primary_key=True, index=True)
-    patientId = Column(Integer, ForeignKey("patients.id"))
+    patientId = Column(Integer, ForeignKey("patients.id",ondelete='CASCADE'),nullable=True)
     bloodGroup = Column(String(5),nullable=True)
     bodyTemperature = Column(String,nullable=True)
     heartRate = Column(String,nullable=True)
     respirationRate = Column(String,nullable=True)
     bloodPressure = Column(String,nullable=True)
+    icdCode=Column(String,nullable=True)
+    cptCode=Column(String, nullable=True)
+    notes=Column(Text, nullable=True)
     createdAt=Column(Date)
 
-    appointmentId=Column(Integer, ForeignKey("appointments.id"))
+    appointmentId=Column(Integer, ForeignKey("appointments.id",ondelete='CASCADE'),nullable=True )
 
     appointment=relationship("Appointment", backref="medicalInfo")
 
@@ -123,13 +126,16 @@ class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(Integer, primary_key=True, index=True)
-    scheduledAt = Column(DateTime)
+    scheduledDate = Column(Date)
+    scheduledTime=Column(Time)
     status = Column(Enum(AppointmentStatus), default=AppointmentStatus.pending)
     doctorId = Column(Integer, ForeignKey("doctors.id"))
     patientId = Column(Integer, ForeignKey("patients.id"))
+    treatmentId=Column(Integer, ForeignKey("treatments.id"))
 
     doctor = relationship("Doctor", backref="appointments")
     patient = relationship("Patient",backref="appointments")
+    treatment = relationship("Treatment", backref="appointments")
 
 # ========== TREATMENT ==========
 

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import Treatment, Doctor
+from app.models import Treatment, Doctor,treatment_doctor
 from app.schema.treatment import TreatmentCreate, TreatmentUpdate
 from datetime import date
 from math import ceil
@@ -71,3 +71,13 @@ def deleteTreatmentService(db: Session, treatmentId: int):
     db.delete(treatment)
     db.commit()
     return treatment
+
+ 
+# ====================Get Doctors  against a Treatment================ 
+def getDoctorsByTreatmentIdService(treatmentId: int,db: Session ):
+    doctors = db.query(Doctor).join(
+        treatment_doctor, Doctor.id==treatment_doctor.c.doctorId
+    ).filter(treatment_doctor.c.treatmentId==treatmentId).all()
+    if not doctors:
+        return None
+    return doctors

@@ -9,7 +9,7 @@ from typing import List
 router = APIRouter(prefix="/appointment", tags=["Appointments"])
 
 
-@router.get("/",)
+@router.get("/",response_model=AppointmentSchema.PaginatedAppointmentOut)
 def getAllAppointments(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
     apptList= AppointmentService.getAllAppointmentsService(skip,limit,db)
     return {
@@ -18,7 +18,7 @@ def getAllAppointments(skip:int=0,limit:int=10,db: Session = Depends(get_db)):
     }
 
 
-@router.get("/{id}")
+@router.get("/{id}",response_model=AppointmentSchema.AppointmentByIdOut)
 def getAppointment(id: int, db: Session = Depends(get_db)):
     appointment = AppointmentService.getAppointmentByIdService(db,id)
     if not appointment:
@@ -37,7 +37,7 @@ def create_appointment(appointment:AppointmentSchema.AppointmentCreate , db: Ses
         raise HTTPException(status_code=400, detail=newAppt["error"])
     return {
         "message": "Appointment created successfully",
-        "data": newAppt
+        "data": newAppt["data"]
     }
 
 

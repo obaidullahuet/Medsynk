@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.utils.errorHandler import handle_integrity_error,generic_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pyngrok import ngrok
+# from pyngrok import ngrok
 import uvicorn
 
 UPLOAD_DIR = "uploads"
@@ -17,8 +17,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-publicUrl=ngrok.connect(8000)
-print(f"Public URL: {publicUrl}")
+# publicUrl=ngrok.connect(8000)
+# print(f"Public URL: {publicUrl}")
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
