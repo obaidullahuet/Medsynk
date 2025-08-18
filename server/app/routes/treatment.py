@@ -71,3 +71,15 @@ def deleteTreatment(id: int, db: Session = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=404, detail="Treatment not found")
     return {"message": "Treatment deleted successfully"}
+
+
+#  ============ Get the Doctors List against a Treatment ===============
+@router.get("/doctors/{id}")
+def getDoctorsByTreatmentId(id: int, db: Session = Depends(get_db)):
+    doctors = TreatmentService.getDoctorsByTreatmentIdService(id, db)
+    if not doctors:
+        raise HTTPException(status_code=404, detail="Doctors not found")
+    return {
+        "message": "Doctors List",
+        "data": doctors
+    }
