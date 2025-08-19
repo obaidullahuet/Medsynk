@@ -20,9 +20,37 @@ from sqlalchemy import Enum
 #     lastName=Column(String(100))
 #     email = Column(String(100), unique=True)
 #     passwordHash = Column(String(255))
-#     userType = Column(Enum(UserType), default=UserType.patient)  # Enum for user type
+#     
 #     createdAt = Column(Date, default=datetime.utcnow)
 
+# class Role(Base):
+#     __tablename__ = "roles"
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String(50), unique=True)
+#     description = Column(Text, nullable=True)
+
+#     # Users with this role
+#     users = relationship("User", back_populates="role", cascade="all, delete-orphan")
+
+# class RolePermissions(Base):
+#     __tablename__ = "role_permissions"
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     roleId = Column(Integer, ForeignKey("roles.id", ondelete='CASCADE'), nullable=False)
+
+#     role = relationship("Role", back_populates="permissions", passive_deletes=True)
+
+# class UserRole(Base):
+#     __tablename__ = "user_roles"
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     userId = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+#     roleId = Column(Integer, ForeignKey("roles.id", ondelete='CASCADE'), nullable=False)
+
+#     user = relationship("User", back_populates="roles", passive_deletes=True)
+#     role = relationship("Role", back_populates="users", passive_deletes=True)
+    
 
 
 # ========== DOCTOR ==========
@@ -51,8 +79,8 @@ class Doctor(Base):
     createdAt=Column(Date)
 
 
-    # availability=relationship("DoctorAvailability", backref="doctor")
-    # appointments = relationship("Appointment", back_populates="doctor")
+    appointments = relationship("Appointment", back_populates="doctor", cascade="all, delete-orphan")
+    availability = relationship("DoctorAvailability", back_populates="doctor", cascade="all, delete-orphan")
     treatments = relationship("Treatment", secondary=treatment_doctor, back_populates="doctors")
 
 # ============= Doctor Availability ========
@@ -60,13 +88,13 @@ class DoctorAvailability(Base):
     __tablename__ = "doctor_availability"
 
     id = Column(Integer, primary_key=True, index=True)
-    doctorId = Column(Integer, ForeignKey("doctors.id",ondelete='CASCADE'),nullable=True)
+    doctorId = Column(Integer, ForeignKey("doctors.id",ondelete='CASCADE'),nullable=False)
     day=Column(String(10))    
     startTime = Column(Time)
     endTime=Column(Time)
     createdAt = Column(Date)
 
-    doctor=relationship("Doctor", backref="availability")
+    doctor = relationship("Doctor", back_populates="availability", passive_deletes=True)
 
 
 
@@ -94,9 +122,9 @@ class Patient(Base):
     image=Column(String, nullable=True)
     createdAt=Column(Date)
 
-    files=relationship("PatientFile", backref="patient")
-    # appointments=relationship("Appointment", back_populates="patient")
-    medicalInfo=relationship("PatientMedicalInfo", backref="patient")
+    files = relationship("PatientFile", back_populates="patient", cascade="all, delete-orphan")
+    medicalInfo = relationship("PatientMedicalInfo", back_populates="patient", cascade="all, delete-orphan")
+    appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan")
 
 
 class PatientMedicalInfo(Base):
@@ -116,7 +144,8 @@ class PatientMedicalInfo(Base):
 
     appointmentId=Column(Integer, ForeignKey("appointments.id",ondelete='CASCADE'),nullable=True )
 
-    appointment=relationship("Appointment", backref="medicalInfo")
+    patient = relationship("Patient", back_populates="medicalInfo", passive_deletes=True)
+    appointment = relationship("Appointment", back_populates="medicalInfo", passive_deletes=True)
 
 # ============ Patient Files ==============
 class PatientFile(Base):
@@ -125,9 +154,12 @@ class PatientFile(Base):
     id=Column(Integer,primary_key=True,index=True)
     fileName = Column(String(100))
     fileUrl = Column(String(255))
-    patientId = Column(Integer, ForeignKey("patients.id"))
+    patientId = Column(Integer, ForeignKey("patients.id",ondelete='CASCADE'),nullable=False)
     # Appt_id
     createdAt=Column(Date)
+    
+    patient = relationship("Patient", back_populates="files", passive_deletes=True)
+
 
 
 # ========== APPOINTMENT ==========
@@ -147,13 +179,14 @@ class Appointment(Base):
     scheduledDate = Column(Date)
     scheduledTime=Column(Time)
     status = Column(Enum(AppointmentStatus), default=AppointmentStatus.pending)
-    doctorId = Column(Integer, ForeignKey("doctors.id"))
-    patientId = Column(Integer, ForeignKey("patients.id"))
-    treatmentId=Column(Integer, ForeignKey("treatments.id"))
+    doctorId = Column(Integer, ForeignKey("doctors.id",ondelete='CASCADE'),nullable=False)
+    patientId = Column(Integer, ForeignKey("patients.id",ondelete='CASCADE'),nullable=False)
+    treatmentId=Column(Integer, ForeignKey("treatments.id",ondelete='CASCADE'),nullable=False)
 
-    doctor = relationship("Doctor", backref="appointments")
-    patient = relationship("Patient",backref="appointments")
-    treatment = relationship("Treatment", backref="appointments")
+    doctor = relationship("Doctor", back_populates="appointments", passive_deletes=True)
+    patient = relationship("Patient", back_populates="appointments", passive_deletes=True)
+    treatment = relationship("Treatment", back_populates="appointments", passive_deletes=True)
+    medicalInfo = relationship("PatientMedicalInfo", back_populates="appointment", cascade="all, delete-orphan")
 
 # ========== TREATMENT ==========
 
@@ -176,7 +209,8 @@ class Treatment(Base):
     description = Column(Text, nullable=True)
     createdAt = Column(Date)
 
-    doctors=relationship("Doctor",secondary=treatment_doctor,back_populates="treatments")
+    doctors = relationship("Doctor", secondary=treatment_doctor, back_populates="treatments")
+    appointments = relationship("Appointment", back_populates="treatment", cascade="all, delete-orphan")
 
 
 

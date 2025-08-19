@@ -1,5 +1,5 @@
 from typing import Union
-from fastapi import APIRouter, Depends, status,File,UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status,File,UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.schema import patient as patientSchema
@@ -56,9 +56,11 @@ def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(pa
         "data": updatedPatient
     }
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
 def deletePatient(id: int, db: Session = Depends(get_db)):
-    patientService.deletePatientService(db, id)
-    return {
-        "message": "Patient Deleted successfully"
-    }
+    resp = patientService.deletePatientService(db, id)
+    
+    if resp:  # deletion succeeded
+        return {"message": "Patient deleted successfully"}
+    else:  # patient not found
+        raise HTTPException(status_code=404, detail="Patient not found")

@@ -42,6 +42,7 @@ def deletePatientService(db: Session, patientId: int):
     
     db.delete(patient)
     db.commit()
+    return True
 
 # ========================= Get Patient List Service ===========
 

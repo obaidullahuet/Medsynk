@@ -8,7 +8,7 @@ from typing import List
 
 router = APIRouter(prefix="/appointment", tags=["Appointments"])
 
-
+# ,
 @router.get("/",response_model=AppointmentSchema.PaginatedAppointmentOut)
 def getAllAppointments(page:int=1,limit:int=10,db: Session = Depends(get_db)):
     apptList= AppointmentService.getAllAppointmentsService(page,limit,db)
@@ -18,7 +18,7 @@ def getAllAppointments(page:int=1,limit:int=10,db: Session = Depends(get_db)):
     }
 
 
-@router.get("/{id}",response_model=AppointmentSchema.AppointmentByIdOut)
+@router.get("/{id}")
 def getAppointment(id: int, db: Session = Depends(get_db)):
     appointment = AppointmentService.getAppointmentByIdService(db,id)
     if not appointment:
