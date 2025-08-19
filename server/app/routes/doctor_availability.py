@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from app.models import DoctorAvailability
@@ -12,7 +13,8 @@ router=APIRouter(tags=["Doctor Availability"])
 
 # ========================== POST ==================================
 @router.post('/add')
-def addDoctorAvailability(availability:DoctorAvailabilitySchema.createDoctorAvailability,db: Session = Depends(get_db)):
+def addDoctorAvailability(availability:List[DoctorAvailabilitySchema.createDoctorAvailability],db: Session = Depends(get_db)):
+    print("json request",availability)
     newAvailability=DoctorAvailabilityService.createDoctorAvailability(availability, db)
 
     if "error" in newAvailability:
@@ -21,7 +23,6 @@ def addDoctorAvailability(availability:DoctorAvailabilitySchema.createDoctorAvai
         raise HTTPException(status_code=404, detail="Doctor not found")
       if newAvailability["error"] == "availability_exists":
         raise HTTPException(status_code=400, detail="Availability already exists")
-    
     return {
     "message": "Doctor availability added successfully",
     "data": newAvailability["data"]
@@ -57,18 +58,20 @@ def getDoctorAvailability(id:int,db: Session = Depends(get_db)):
 
 # ========================== PUT & DELETE ==================================
 
-@router.put('/update/{id}')
-def updateDoctorAvailability(id: int, availability: DoctorAvailabilitySchema.DoctorAvailabilityUpdate, db: Session = Depends(get_db)):
-    updatedRecord=DoctorAvailabilityService.updateDoctorAvailability(id, availability, db)
-    if not updatedRecord:
-        return {
-            "message": "Doctor availability not found",
-            "data": None
-        }
+@router.put('/update/doctor/{id}') 
+def updateDoctorAvailability(id: int, availability:List[DoctorAvailabilitySchema.DoctorAvailabilityUpdate], db: Session = Depends(get_db)):
+    
+    updateAvailability=DoctorAvailabilityService.updateDoctorAvailability(id,availability, db)
+    # if "error" in updateAvailability:
+
+    #   if updateAvailability["error"] == "doctor_not_found":
+    #     raise HTTPException(status_code=404, detail="Doctor not found")
+    #   if updateAvailability["error"] == "availability_exists":
+    #     raise HTTPException(status_code=400, detail="Availability already exists")
     return {
-        "message": "Doctor availability updated successfully",
-        "data": updatedRecord
-    }
+    "message": "Doctor availability Updated successfully",
+    # "data": updateAvailability["data"]
+     }
 
 @router.delete('/delete/{id}')
 def deleteDoctorAvailability(id: int, db: Session = Depends(get_db)):

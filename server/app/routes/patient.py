@@ -1,3 +1,4 @@
+from typing import Union
 from fastapi import APIRouter, Depends, status,File,UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -10,10 +11,14 @@ router = APIRouter(tags=["Patient"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchema.patientFormDependency) 
-                  ,image:UploadFile=File(None),
+                #   ,image:UploadFile=File(None),
+                    ,image: Union[UploadFile, None, str] = File(None),
                    db: Session = Depends(get_db)):
-    if image:
+    if image and isinstance(image, UploadFile):
         patientData.image = fileHandler.saveUploadedFile(image)
+    else:
+        patientData.image = None
+        
     newPatient = patientService.createPatientService(db, patientData)
     return {
         "message": "Patient Created",

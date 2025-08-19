@@ -1,3 +1,4 @@
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException,Form,UploadFile,File
 from sqlalchemy.orm import Session
 from config.database import get_db
@@ -22,11 +23,17 @@ router = APIRouter(prefix="/treatment", tags=["Treatments"])
 @router.post("/")
 def create_treatment(
     treatment: TreatmentSchema.TreatmentCreate = Depends(TreatmentSchema.treatmentFormDependency),
-    image: UploadFile = File(None),
+    # image:Optional[UploadFile] = File(None),
+    image: Union[UploadFile, None, str] = File(None),
     db: Session = Depends(get_db)
 ):
-    # print(treatment)
-    treatment.image = saveUploadedFile(image) if image else None
+    # print(treatment,image)
+
+    if image and isinstance(image, UploadFile):
+       treatment.image = saveUploadedFile(image)
+    else:
+       treatment.image = None
+
     new_treatment = TreatmentService.createTreatmentService(db, treatment)
     return {
         "message": "Treatment created successfully",

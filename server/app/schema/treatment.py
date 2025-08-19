@@ -5,14 +5,14 @@ from enum import Enum
 from fastapi import Form
 import json
 
-class TreatmentType(str, Enum):
+class TreatmentEnum(str, Enum):
     surgical = "surgical"
     non_surgical = "non_surgical"
     other = "other"
 
 class TreatmentBase(BaseModel):
     name: str
-    treatmentType: TreatmentType
+    treatmentType: TreatmentEnum
     description: Optional[str] = None
     about:Optional[str]=None
     createdAt: Optional[date] =None
@@ -25,7 +25,7 @@ class TreatmentCreate(TreatmentBase):
 
 class TreatmentUpdate(BaseModel):
     name: Optional[str]=None
-    treatmentType: Optional[TreatmentType]=None
+    treatmentType: Optional[TreatmentEnum]=None
     about:Optional[str]=None
     description: Optional[str]=None
     createdAt: Optional[date]=None 
@@ -52,7 +52,7 @@ class PaginatedTreatmentOut(BaseModel):
 
 def treatmentFormDependency(
     name: str = Form(...),
-    treatmentType: str = Form(...),
+    treatmentType: TreatmentEnum = Form(...),
     about:Optional[str]=Form(...),
     description: Optional[str] = Form(None),
     createdAt: Optional[date] = Form(None),
@@ -78,7 +78,7 @@ def treatmentFormDependency(
 def updateTreatmentDependency(
     name: Optional[str] = Form(None),
     about:Optional[str]=Form(None),
-    treatmentType: Optional[TreatmentType] = Form(None),
+    treatmentType: Optional[TreatmentEnum] = Form(None),
     description: Optional[str] = Form(None),
     createdAt: Optional[date] = Form(None),
     doctorIds: Optional[str] = Form(None),

@@ -1,3 +1,4 @@
+from typing import List
 from app.schema import doctor_availability as doctorAvailabilitySchema
 from sqlalchemy.orm import Session
 from app.models import DoctorAvailability
@@ -8,47 +9,80 @@ from sqlalchemy import func
 
 
 
-def createDoctorAvailability(availability:doctorAvailabilitySchema.createDoctorAvailability,db:Session):
-    new_availability = DoctorAvailability(**availability.dict())
+def createDoctorAvailability(availability:List[doctorAvailabilitySchema.createDoctorAvailability],db:Session):
+    try:
+      doctorId = availability[0].doctorId
+      
+      doctorFound=db.query(Doctor).filter(Doctor.id==doctorId).first()
+      if not doctorFound:
+            print("doctor not found")
+            return {"error": "doctor_not_found"}
+      createdList=[]
+      for avail in availability:
+        exist = db.query(DoctorAvailability).filter(
+            DoctorAvailability.doctorId == avail.doctorId,
+            func.lower(DoctorAvailability.day) == avail.day.lower(),
+        ).first()
+        print(exist)
+        if exist:
+            print("availability already exists")
+            createdList.append(exist)
+            continue
+        else:
+            new_avail=DoctorAvailability(**avail.dict())
+            db.add(new_avail)
+            createdList.append(new_avail)
+      db.commit()
+      for obj in createdList:
+            db.refresh(obj)
+      return {"data": createdList}
+      
 
-    #  add the createdAt 
-    new_availability.createdAt=datetime.utcnow()
+    except Exception as e:
+      db.rollback()
+      print("Error in create availability:", e)
+      return {"error": str(e)}
 
-    # check if the doctor is there or not 
-    isDoctorExist=db.query(Doctor).filter(Doctor.id == availability.doctorId).first()
-    if not isDoctorExist:
-        return {"error": "doctor_not_found"}
+
+def updateDoctorAvailability(id:int,availability:List[doctorAvailabilitySchema.DoctorAvailabilityUpdate], db:Session):
+    try:
+      doctorId=id
+      doctorFound=db.query(Doctor).filter(Doctor.id==doctorId).first()
+      if not doctorFound:
+            print("doctor not found")
+            return {"error": "doctor_not_found"}
+      updatedList=[]
+      for avail in availability:
+          exist=db.query(DoctorAvailability).filter(DoctorAvailability.doctorId==doctorId,DoctorAvailability.day==avail.day).first()
+          
+          if exist:
+                exist.startTime = avail.startTime
+                exist.endTime = avail.endTime
+                
+                updatedList.append(exist)
+          else:
+                new_avail=DoctorAvailability(**avail.dict())
+                db.add(new_avail) 
+                updatedList.append(new_avail)
+      db.commit()  
+      for obj in updatedList:
+                db.refresh(obj)
     
-    exist = db.query(DoctorAvailability).filter(
-    DoctorAvailability.doctorId == availability.doctorId,
-    func.lower(DoctorAvailability.day) == availability.day.lower() 
-    ).first()    
+      return {"data": updatedList}
 
-    if exist:
-        return {"error": "availability_exists"}
-    
-    db.add(new_availability)
-    db.commit()
-    db.refresh(new_availability)
-    return {"data": new_availability}  # wrap in a dict
+    except Exception as e:
+      db.rollback()
+      print("Error in update availability:", e)
+      return {"error": str(e)}
+
+
+
 
 def getDoctorAvailabilityByDoctorId(doctorId:int, db:Session):
     return db.query(DoctorAvailability).filter(DoctorAvailability.doctorId == doctorId).all()
 
 def getDoctorAvailabilityById(id:int, db:Session):
     return db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()
-
-def updateDoctorAvailability(id:int, updated_availability:doctorAvailabilitySchema.DoctorAvailabilityUpdate, db:Session):
-    availability = db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()
-    if not availability:
-        return None
-    if availability:
-        update_data = updated_availability.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(availability, key, value)
-        db.commit()
-        db.refresh(availability)
-        return availability
 
 def deleteDoctorAvailability(id:int, db:Session):
     availability = db.query(DoctorAvailability).filter(DoctorAvailability.id == id).first()

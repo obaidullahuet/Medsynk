@@ -7,6 +7,24 @@ from sqlalchemy import Enum
 
 
 
+# ============== User ====================
+# class UserType(enum.Enum):
+#     doctor = "doctor"
+#     patient = "patient"
+#     admin = "admin"
+# class User(Base):
+#     __tablename__ = "users"
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     firstName=Column(String(100))
+#     lastName=Column(String(100))
+#     email = Column(String(100), unique=True)
+#     passwordHash = Column(String(255))
+#     userType = Column(Enum(UserType), default=UserType.patient)  # Enum for user type
+#     createdAt = Column(Date, default=datetime.utcnow)
+
+
+
 # ========== DOCTOR ==========
 
 treatment_doctor=Table(
