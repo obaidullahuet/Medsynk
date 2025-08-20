@@ -9,11 +9,13 @@ from app.schema import doctor as DoctorSchema
 from app.utils.fileHandler import saveUploadedFile
 from datetime import date
 
+from app.middlewares.auth_middleware import requirePermission
+
 
 router = APIRouter(tags=['Doctor'])
 
 
-@router.post('/',status_code=status.HTTP_201_CREATED)
+@router.post('/',status_code=status.HTTP_201_CREATED,dependencies=[Depends(requirePermission("doctor-create"))])
 def createDoctor( 
     name: str = Form(...),
     specialty: str = Form(...),
@@ -67,14 +69,14 @@ def createDoctor(
 
      
 
-@router.get('/')
+@router.get('/',dependencies=[Depends(requirePermission("doctor-view"))])
 def getDoctorList(page:int=1,limit:int=10,db: Session = Depends(get_db)):
         
         resultData=DoctorService.getDoctorList(page,limit,db)
         return {"message":"Doctors List",**resultData}
 
 
-@router.get("/{id}")
+@router.get("/{id}",dependencies=[Depends(requirePermission("doctor-view"))])
 def getDoctorById(id: int, db: Session = Depends(get_db)):
     doctor = DoctorService.getDoctorById(id,db)
     if doctor is None:
@@ -84,7 +86,7 @@ def getDoctorById(id: int, db: Session = Depends(get_db)):
         "data": doctor
     }
 
-@router.put("/{id}")
+@router.put("/{id}",dependencies=[Depends(requirePermission("doctor-update"))])
 def updateDoctor(
     id: int,
     name: Optional[str] = Form(None),
@@ -135,7 +137,7 @@ def updateDoctor(
         "data": updatedDoctor,
     }
     
-@router.delete("/{id}")
+@router.delete("/{id}",dependencies=[Depends(requirePermission("doctor-delete"))])
 def deleteDoctor(id: int, db: Session = Depends(get_db)):
         doctor = DoctorService.deleteDoctor(id,db)
         return {

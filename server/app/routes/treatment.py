@@ -7,20 +7,12 @@ from app.services import treatment as TreatmentService
 from app.utils.fileHandler import saveUploadedFile
 import json
 
+from app.middlewares.auth_middleware import requirePermission
+
 
 router = APIRouter(prefix="/treatment", tags=["Treatments"])
 
-# @router.post("/",)
-# def createTreatment(treatment: TreatmentSchema.TreatmentCreate, db: Session = Depends(get_db)):
-#     newTreatemnt=TreatmentService.createTreatmentService(db, treatment)
-#     return {
-#         "message": "Treatment created successfully",
-#         "data": newTreatemnt
-#     }
-
-
-
-@router.post("/")
+@router.post("/",dependencies=[Depends(requirePermission("treatment-create"))])
 def create_treatment(
     treatment: TreatmentSchema.TreatmentCreate = Depends(TreatmentSchema.treatmentFormDependency),
     # image:Optional[UploadFile] = File(None),
@@ -40,7 +32,7 @@ def create_treatment(
         "data": new_treatment
     }
 #  response_model=TreatmentSchema.PaginatedTreatmentOut
-@router.get("/",)
+@router.get("/",dependencies=[Depends(requirePermission("treatment-view"))])
 def getAllTreatments(page: int = 1, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
     allTreatment = TreatmentService.getAllTreatmentsService(page, limit,filter, db)
     if not allTreatment:
@@ -50,14 +42,14 @@ def getAllTreatments(page: int = 1, limit: int = 10,filter:str=None, db: Session
         **allTreatment
     }
 
-@router.get("/{id}", )
+@router.get("/{id}",dependencies=[Depends(requirePermission("treatment-view"))])
 def getTreatmentById(id: int, db: Session = Depends(get_db)):
     dbTreatment = TreatmentService.getTreatmentByIdService(db, id)
     if not dbTreatment:
         raise HTTPException(status_code=404, detail="Treatment not found")
     return dbTreatment
 
-@router.put("/{id}")
+@router.put("/{id}",dependencies=[Depends(requirePermission("treatment-update"))])
 def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depends(TreatmentSchema.updateTreatmentDependency),    image: UploadFile = File(None), db: Session = Depends(get_db)):
     print(update_data)
     if image:
@@ -72,7 +64,7 @@ def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depend
         "data": updated_treatment
     }
 
-@router.delete("/{id}")
+@router.delete("/{id}",dependencies=[Depends(requirePermission("treatment-delete"))])
 def deleteTreatment(id: int, db: Session = Depends(get_db)):
     deleted = TreatmentService.deleteTreatmentService(db, id)
     if not deleted:

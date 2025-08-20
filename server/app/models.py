@@ -8,51 +8,54 @@ from sqlalchemy import Enum
 
 
 # ============== User ====================
-# class UserType(enum.Enum):
-#     doctor = "doctor"
-#     patient = "patient"
-#     admin = "admin"
-# class User(Base):
-#     __tablename__ = "users"
+class User(Base):
+    __tablename__ = "users"
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     firstName=Column(String(100))
-#     lastName=Column(String(100))
-#     email = Column(String(100), unique=True)
-#     passwordHash = Column(String(255))
-#     
-#     createdAt = Column(Date, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    firstName=Column(String(100))
+    lastName=Column(String(100))
+    email = Column(String(100), unique=True)
+    password = Column(String(255))
+    roleId=Column(Integer,ForeignKey("roles.id",ondelete='CASCADE'),nullable=True)
+    
+    createdAt = Column(Date, default=datetime.utcnow) 
+    
+    role=relationship("Role",back_populates='users') 
 
-# class Role(Base):
-#     __tablename__ = "roles"
-
-#     id = Column(Integer, primary_key=True, index=True)
-#     name = Column(String(50), unique=True)
-#     description = Column(Text, nullable=True)
-
-#     # Users with this role
-#     users = relationship("User", back_populates="role", cascade="all, delete-orphan")
-
-# class RolePermissions(Base):
-#     __tablename__ = "role_permissions"
-
-#     id = Column(Integer, primary_key=True, index=True)
-#     roleId = Column(Integer, ForeignKey("roles.id", ondelete='CASCADE'), nullable=False)
-
-#     role = relationship("Role", back_populates="permissions", passive_deletes=True)
-
-# class UserRole(Base):
-#     __tablename__ = "user_roles"
-
-#     id = Column(Integer, primary_key=True, index=True)
-#     userId = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-#     roleId = Column(Integer, ForeignKey("roles.id", ondelete='CASCADE'), nullable=False)
-
-#     user = relationship("User", back_populates="roles", passive_deletes=True)
-#     role = relationship("Role", back_populates="users", passive_deletes=True)
     
 
-
+role_permission = Table(
+    "role_permission_junction",
+    Base.metadata,
+    Column("roleId", Integer, ForeignKey("roles.id"), primary_key=True),
+    Column("permissionId", Integer, ForeignKey("permissions.id"), primary_key=True)
+)    
+  
+class Role(Base):
+    __tablename__="roles"
+    
+    id=Column(Integer, primary_key=True, index=True)
+    name=Column(String(100),unique=True)
+    description=Column(String(100),nullable=True)
+    createdAt = Column(Date, default=datetime.utcnow)
+    
+    users=relationship("User",back_populates='role')
+    permissions=relationship("Permission",secondary=role_permission,back_populates='roles')
+    
+    
+    
+class Permission(Base):
+    __tablename__="permissions"
+    
+    id=Column(Integer,primary_key=True,index=True)
+    name=Column(String(100),unique=True)
+    description=Column(String(100),nullable=True)
+    
+    
+    roles=relationship("Role",secondary=role_permission,back_populates="permissions")
+    
+  
+  
 # ========== DOCTOR ==========
 
 treatment_doctor=Table(

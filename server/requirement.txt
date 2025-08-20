@@ -8,4 +8,5 @@ pydantic[email]
 python-multipart
 jinja2
 alembic
-jwt
+PyJWT 
+passlib[argon2]

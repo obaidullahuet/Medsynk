@@ -6,10 +6,11 @@ from app.schema import patient as patientSchema
 from config.database import get_db
 from app.services import patient as patientService
 from app.utils import fileHandler
+from app.middlewares.auth_middleware import requirePermission
 
 router = APIRouter(tags=["Patient"])
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED,dependencies=[Depends(requirePermission("patient-create"))])
 def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchema.patientFormDependency) 
                 #   ,image:UploadFile=File(None),
                     ,image: Union[UploadFile, None, str] = File(None),
@@ -25,7 +26,7 @@ def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchem
         "data": newPatient
     }
 
-@router.get("/")
+@router.get("/",dependencies=[Depends(requirePermission("patient-view"))])
 def getPatients(page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
     patientsData = patientService.getPatientList(page, limit, db)
     return {
@@ -33,7 +34,7 @@ def getPatients(page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
         **patientsData
     }
 
-@router.get("/{id}", )
+@router.get("/{id}",dependencies=[Depends(requirePermission("patient-view"))] )
 def getPatient(id: int, db: Session = Depends(get_db)):
     patientDetail = patientService.getPatientService(db, id)
     if patientDetail is None:
@@ -43,7 +44,7 @@ def getPatient(id: int, db: Session = Depends(get_db)):
         "data": patientDetail
     }
 
-@router.put("/{id}")
+@router.put("/{id}",dependencies=[Depends(requirePermission("patient-update"))])
 def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(patientSchema.updatePatientDependency)
                   ,image:UploadFile=File(None),
                     db: Session = Depends(get_db)):
@@ -56,7 +57,7 @@ def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(pa
         "data": updatedPatient
     }
 
-@router.delete("/{id}", status_code=status.HTTP_200_OK)
+@router.delete("/{id}", status_code=status.HTTP_200_OK,dependencies=[Depends(requirePermission("patient-delete"))])
 def deletePatient(id: int, db: Session = Depends(get_db)):
     resp = patientService.deletePatientService(db, id)
     

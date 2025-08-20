@@ -5,11 +5,12 @@ from config.database import get_db
 from app.services import appointment as AppointmentService
 from app.schema import appointment as AppointmentSchema
 from typing import List
+from app.middlewares.auth_middleware import requirePermission
 
 router = APIRouter(prefix="/appointment", tags=["Appointments"])
 
-# ,
-@router.get("/",response_model=AppointmentSchema.PaginatedAppointmentOut)
+# 
+@router.get("/",response_model=AppointmentSchema.PaginatedAppointmentOut,dependencies=[Depends(requirePermission("appointment-view"))])
 def getAllAppointments(page:int=1,limit:int=10,db: Session = Depends(get_db)):
     apptList= AppointmentService.getAllAppointmentsService(page,limit,db)
     return {
@@ -18,7 +19,7 @@ def getAllAppointments(page:int=1,limit:int=10,db: Session = Depends(get_db)):
     }
 
 
-@router.get("/{id}")
+@router.get("/{id}",dependencies=[Depends(requirePermission("appointment-view"))])
 def getAppointment(id: int, db: Session = Depends(get_db)):
     appointment = AppointmentService.getAppointmentByIdService(db,id)
     if not appointment:
@@ -29,7 +30,7 @@ def getAppointment(id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/")
+@router.post("/",dependencies=[Depends(requirePermission("appointment-create"))])
 def create_appointment(appointment:AppointmentSchema.AppointmentCreate , db: Session = Depends(get_db)):
 
     newAppt= AppointmentService.createAppointmentService(db, appointment)
@@ -41,7 +42,7 @@ def create_appointment(appointment:AppointmentSchema.AppointmentCreate , db: Ses
     }
 
 
-@router.put("/{id}")
+@router.put("/{id}",dependencies=[Depends(requirePermission("appointment-update"))])
 def update_appointment(id: int, appointment_update: AppointmentSchema.AppointmentUpdate, db: Session = Depends(get_db)):
     updated = AppointmentService.updateAppointmentService(db, id, appointment_update)
     if "error" in updated:
@@ -51,7 +52,7 @@ def update_appointment(id: int, appointment_update: AppointmentSchema.Appointmen
         "data": updated["data"]
     }
 
-@router.delete("/{id}")
+@router.delete("/{id}",dependencies=[Depends(requirePermission("appointment-delete"))])
 def delete_appointment(id: int, db: Session = Depends(get_db)):
     deleted = AppointmentService.deleteAppointmentService(db, id)
     if not deleted:

@@ -11,6 +11,10 @@ class BaseMedicalInfo(BaseModel):
     respirationRate: str
     bloodPressure: str
     appointmentId:int
+    icpCode:str
+    cptCode:str
+    notes:str
+    
     createdAt: datetime
 
 class MedicalInfoCreate(BaseMedicalInfo):
