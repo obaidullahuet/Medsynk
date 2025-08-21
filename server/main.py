@@ -7,6 +7,9 @@ from app.utils.errorHandler import custom_http_exception_handler, handle_integri
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.utils import get_openapi
+from fastapi.security import HTTPBearer
+
 # from pyngrok import ngrok
 import uvicorn
 from fastapi import HTTPException
@@ -21,8 +24,27 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# publicUrl=ngrok.connect(8000)
-# print(f"Public URL: {publicUrl}")
+bearer_scheme = HTTPBearer()
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Medical API",
+        version="1.0",
+        description="API with token authentication",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {"type": "http", "scheme": "bearer"}
+    }
+    for path in openapi_schema["paths"].values():
+        for method in path.values():
+            method["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
@@ -32,8 +54,9 @@ Base.metadata.create_all(bind=engine)
 
 # Register Error Handler
 app.add_exception_handler(IntegrityError, handle_integrity_error)
-app.add_exception_handler(Exception, generic_exception_handler)
 app.add_exception_handler(HTTPException, custom_http_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
+
 
 app.add_middleware(
     CORSMiddleware,

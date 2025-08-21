@@ -46,7 +46,7 @@ def getPatient(id: int, db: Session = Depends(get_db)):
 
 @router.put("/{id}",dependencies=[Depends(requirePermission("patient-update"))])
 def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(patientSchema.updatePatientDependency)
-                  ,image:UploadFile=File(None),
+                  ,image: Union[UploadFile, None, str] = File(None),
                     db: Session = Depends(get_db)):
     if image and isinstance(image, UploadFile):
         patientUpdate.image = fileHandler.saveUploadedFile(image)

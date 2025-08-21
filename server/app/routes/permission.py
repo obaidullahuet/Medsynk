@@ -36,7 +36,7 @@ def getPermissionById(id:int,db:Session=Depends(get_db)):
 
 @router.get('/',description="Get all Permissions")
 def getAllPermissions(db:Session=Depends(get_db)):
-    permissions=PermissionService.getAllPermission(db)
+    permissions=PermissionService.getAllPermissions(db)
     if "error" in permissions:
         raise HTTPException(status_code=500, detail=permissions["error"])
     return {

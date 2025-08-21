@@ -17,9 +17,9 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
         createdAt=date.today()
     )
 
-    if treatmentData.doctorIds:
-        doctors = db.query(Doctor).filter(Doctor.id.in_(treatmentData.doctorIds)).all()
-        treatment.doctors.extend(doctors)
+    # if treatmentData.doctorIds:
+    #     doctors = db.query(Doctor).filter(Doctor.id.in_(treatmentData.doctorIds)).all()
+    #     treatment.doctors.extend(doctors)
 
     db.add(treatment)
     db.commit()
@@ -53,12 +53,12 @@ def updateTreatmentService(db: Session, treatmentId: int, updateData: TreatmentU
         print(field, value)
         # if value is None:
         #     continue
-        if field == "doctorIds" and value is not None:
-            treatment.doctors.clear()
-            doctors = db.query(Doctor).filter(Doctor.id.in_(value)).all()
-            treatment.doctors.extend(doctors)
-        else:
-            setattr(treatment, field, value)
+        # if field == "doctorIds" and value is not None:
+        #     treatment.doctors.clear()
+        #     doctors = db.query(Doctor).filter(Doctor.id.in_(value)).all()
+        #     treatment.doctors.extend(doctors)
+        # else:
+        setattr(treatment, field, value)
 
     db.commit()
     db.refresh(treatment)

@@ -105,7 +105,12 @@ def updateAppointmentService(db: Session, appointment_id: int, appointment_data:
     doctor = db.query(Doctor).filter(Doctor.id == appointment_data.doctorId).first()
     if not doctor:
         return {"error": "Doctor not found"}
-
+    patient=db.query(Patient).filter(Patient.id==appointment_data.patientId).first()
+    if not patient:
+        return {"error":"Patient not found"}
+    treatment=db.query(Treatment).filter(Treatment.id==appointment_data.treatmentId).first()
+    if not treatment:
+        return {"error":"Treatment not found"}
     # 3. Check doctor's availability for the requested day
     day_name = appointment_data.scheduledDate.strftime("%A").lower()
     availability = db.query(DoctorAvailability).filter(
@@ -143,7 +148,7 @@ def updateAppointmentService(db: Session, appointment_id: int, appointment_data:
         None
     )
     if overlapping:
-        return {"error": "Slot already booked"}
+        return {"error": "Sorry!! Slot is already booked kindly try for another slot"}
 
     # 7. Update appointment fields
     appointment.scheduledDate = appointment_data.scheduledDate

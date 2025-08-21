@@ -16,7 +16,7 @@ class TreatmentBase(BaseModel):
     description: Optional[str] = None
     about:Optional[str]=None
     createdAt: Optional[date] =None
-    doctorIds: Optional[List[int]] = None
+    # doctorIds: Optional[List[int]] = None
     image:Optional[str] =None
     price:Optional[float] = None
 
@@ -29,7 +29,7 @@ class TreatmentUpdate(BaseModel):
     about:Optional[str]=None
     description: Optional[str]=None
     createdAt: Optional[date]=None 
-    doctorIds: Optional[List[int]]=None
+    # doctorIds: Optional[List[int]]=None
     image: Optional[str]=Form(None)
     price: Optional[float]=None
 
@@ -56,13 +56,13 @@ def treatmentFormDependency(
     about:Optional[str]=Form(...),
     description: Optional[str] = Form(None),
     createdAt: Optional[date] = Form(None),
-    doctorIds: Optional[str] = Form(None),
+    # doctorIds: Optional[str] = Form(None),
     price:Optional[float]=Form(None),
    
 ):
     # print("description",description)
     # description_parsed = json.loads(description) if description and description.strip() else None
-    doctorIds_parsed = json.loads(doctorIds) if doctorIds and doctorIds.strip() else None
+    # doctorIds_parsed = json.loads(doctorIds) if doctorIds and doctorIds.strip() else None
     return TreatmentCreate(
         name=name,
         treatmentType=treatmentType,
@@ -71,7 +71,7 @@ def treatmentFormDependency(
         description=description,
         createdAt=createdAt,
         # doctorIds=json.loads(doctorIds) if doctorIds else None,
-        doctorIds=doctorIds_parsed,
+        # doctorIds=doctorIds_parsed,
         price=price
     )
 
@@ -81,15 +81,16 @@ def updateTreatmentDependency(
     treatmentType: Optional[TreatmentEnum] = Form(None),
     description: Optional[str] = Form(None),
     createdAt: Optional[date] = Form(None),
-    doctorIds: Optional[str] = Form(None),
+    # doctorIds: Optional[str] = Form(None),
     price:Optional[float]=Form(None),
 ):
+    # doctorIds_parsed = json.loads(doctorIds) if doctorIds and doctorIds.strip() else None
     return TreatmentUpdate(
         name=name,
         about=about,
         treatmentType=treatmentType,
         description=description if description else None,
         createdAt=createdAt,
-        doctorIds=json.loads(doctorIds) if doctorIds else None,
+        # doctorIds=doctorIds_parsed,
         price=price
     )

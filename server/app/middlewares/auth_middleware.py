@@ -12,7 +12,7 @@ app=FastAPI()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-PUBLIC_PATHS=["/api/auth/login","/api/auth/signup","/auth/doctor/register","/auth/doctor/login"]
+PUBLIC_PATHS=["/api/auth/login","/api/auth/signup","/auth/doctor/register","/auth/doctor/login","/docs","/openapi.json"]
 
 async def jwt_middleware(request:Request,call_next):
 
@@ -32,17 +32,22 @@ async def jwt_middleware(request:Request,call_next):
     try:
         
         payload=jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        # print(payload)
+        
+        print(payload)
         request.state.userId=payload["id"]
         request.state.userRole=payload["userRole"]
         request.state.userRoleId=payload["userRoleId"]
         request.state.permissions=payload["userPermissions"]
         request.state.email=payload["email"]
         
-        
-    except jwt.ExpiredSignatureError:
-        return JSONResponse({"error": "Token expired"}, status_code=401)
-    
+        print(request.state.permissions)
+    # except jwt.ExpiredSignatureError:
+    #     raise HTTPException(status_code=401, detail="Invalid Token")
+    # except jwt.InvalidTokenError:
+    #     raise HTTPException(status_code=401,detail="Invalid Token")
+    except Exception as e:
+        print(e)
+        return JSONResponse({"error": "Invalid Auth Token"}, status_code=401)
     response=await call_next(request)
     return response
 
@@ -57,7 +62,7 @@ def requirePermission(permission: str):
         if not hasattr(request.state, "permissions") or request.state.permissions is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
         
-
+        # print(request)
         if request.state.userRole=='admin':
             return True
         

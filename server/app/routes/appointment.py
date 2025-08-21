@@ -48,7 +48,7 @@ def update_appointment(id: int, appointment_update: AppointmentSchema.Appointmen
     if "error" in updated:
         raise HTTPException(status_code=400, detail=updated["error"])
     return {
-        "message": "Appointment created successfully",
+        "message": "Appointment Updated successfully",
         "data": updated["data"]
     }
 

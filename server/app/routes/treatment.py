@@ -32,6 +32,7 @@ def create_treatment(
         "data": new_treatment
     }
 #  response_model=TreatmentSchema.PaginatedTreatmentOut
+
 @router.get("/",dependencies=[Depends(requirePermission("treatment-view"))])
 def getAllTreatments(page: int = 1, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
     allTreatment = TreatmentService.getAllTreatmentsService(page, limit,filter, db)

@@ -11,7 +11,7 @@ class BaseMedicalInfo(BaseModel):
     respirationRate: str
     bloodPressure: str
     appointmentId:int
-    icpCode:str
+    icdCode:str
     cptCode:str
     notes:str
     
@@ -34,4 +34,6 @@ class MedicalInfoUpdate(BaseModel):
     respirationRate: Optional[str]
     appointmentId:Optional[int]
     bloodPressure: Optional[str]
+    icdCode:Optional[str]
+    cptCode:Optional[str]
 

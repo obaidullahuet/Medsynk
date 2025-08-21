@@ -1,6 +1,7 @@
 import json
-from typing import Optional
-from fastapi import APIRouter ,Depends,HTTPException, Form ,File,UploadFile,status
+from typing import List, Optional, Union
+from fastapi import APIRouter ,Depends,HTTPException, UploadFile,Form ,File,status
+# from starlette.datastructures import UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from config.database import get_db
@@ -10,6 +11,7 @@ from app.utils.fileHandler import saveUploadedFile
 from datetime import date
 
 from app.middlewares.auth_middleware import requirePermission
+from app.models import Treatment
 
 
 router = APIRouter(tags=['Doctor'])
@@ -17,49 +19,51 @@ router = APIRouter(tags=['Doctor'])
 
 @router.post('/',status_code=status.HTTP_201_CREATED,dependencies=[Depends(requirePermission("doctor-create"))])
 def createDoctor( 
-    name: str = Form(...),
-    specialty: str = Form(...),
-    contact: str = Form(...),
-    email: str = Form(...),
-    address: str = Form(...),
-    experience: Optional[str] = Form(...), 
-    about: Optional[str] = Form(None),
-    available: Optional[bool] = Form(True),
-    slotDuration: Optional[int] = Form(None),
-    profilePhoto: Optional[UploadFile] = File(None),
+    doctorData:DoctorSchema.DoctorCreate=Depends(DoctorSchema.doctorFormDependency),
+    profilePhoto: UploadFile= File(None),
     db: Session = Depends(get_db)
 ):
     # Handle file upload
-    print(profilePhoto)
     profilePhotoPath = None
-    if profilePhoto and profilePhoto!='':
-        profilePhotoPath = saveUploadedFile(profilePhoto)
-    if slotDuration is None or slotDuration==0:
-        slotDuration = 15
+    print(type(profilePhoto))
+
+    if type(profilePhoto) is not str and profilePhoto is not None:
+        
+         profilePhotoPath = saveUploadedFile(profilePhoto)
+
+    doctorData.profilePhoto = profilePhotoPath
+    
+    print(doctorData)
+
+    # if slotDuration is None or slotDuration==0:
+    #     slotDuration = 15
     # Parse experience JSON string
     experienceDict = {}
-    if experience:
-        print(experience)
-        try:
-            experienceDict = json.loads(experience)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
+    # if experience:
+    #     print(experience)
+    #     try:
+    #         experienceDict = json.loads(experience)
+    #     except json.JSONDecodeError:
+    #         raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
+    # if treatmentIds:
+    #     treatments = db.query(Treatment).filter(Treatment.id.in_(.doctorIds)).all()
+    #     treatment.doctors.extend(doctors)
+    # doctor = DoctorSchema.DoctorCreate(
+    #     name=name,
+    #     specialty=specialty,
+    #     contact=contact,
+    #     email=email,
+    #     address=address,
+    #     experience=experienceDict,
+    #     about=about,
+    #     slotDuration=slotDuration,
+    #     available=available,
+    #     treatmentIds=treatmentIds,
+    #     profilePhoto=profilePhotoPath,
+    #     createdAt=date.today()
+    # )
 
-    doctor = DoctorSchema.DoctorCreate(
-        name=name,
-        specialty=specialty,
-        contact=contact,
-        email=email,
-        address=address,
-        experience=experienceDict,
-        about=about,
-        slotDuration=slotDuration,
-        available=available,
-        profilePhoto=profilePhotoPath,
-        createdAt=date.today()
-    )
-
-    createdDoctor = DoctorService.createDoctor(db, doctor)
+    createdDoctor = DoctorService.createDoctor(db, doctorData)
     return {
         "message": "Doctor Created",
         "data": createdDoctor
@@ -89,46 +93,38 @@ def getDoctorById(id: int, db: Session = Depends(get_db)):
 @router.put("/{id}",dependencies=[Depends(requirePermission("doctor-update"))])
 def updateDoctor(
     id: int,
-    name: Optional[str] = Form(None),
-    specialty: Optional[str] = Form(None),
-    contact: Optional[str] = Form(None),
-    email: Optional[str] = Form(None),
-    address: Optional[str] = Form(None),
-    experience: Optional[str] = Form(None),
-    about: Optional[str] = Form(None),
-    slotDuration: Optional[int] = Form(None),
-    available: Optional[bool] = Form(None),
-    profilePhoto: Optional[UploadFile] = File(None),
+    updateData:DoctorSchema.DoctorUpdate=Depends(DoctorSchema.doctorUpdateFormDependency),
+    profilePhoto:Union[UploadFile, None, str] = File(None),
     db: Session = Depends(get_db),
 ):
     profilePhotoPath = None
     if profilePhoto and  isinstance(profilePhoto,UploadFile):
         profilePhotoPath = saveUploadedFile(profilePhoto)
-
-    experienceDict = None
-    if experience is not None:
-        try:
-            experienceDict = json.loads(experience)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
+    updateData.profilePhoto = profilePhotoPath
+    # experienceDict = None
+    # if experience is not None:
+    #     try:
+    #         experienceDict = json.loads(experience)
+    #     except json.JSONDecodeError:
+    #         raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
    
-    updateData = {
-        "name": name,
-        "specialty": specialty,
-        "contact": contact,
-        "email": email,
-        "address": address,
-        "experience": experienceDict,
-        "about": about,
-        "available": available,
-        "profilePhoto": profilePhotoPath,
-        "slotDuration": slotDuration,
-    }
-    updateData = {k: v for k, v in updateData.items() if v is not None}
+    # updateData = {
+    #     "name": name,
+    #     "specialty": specialty,
+    #     "contact": contact,
+    #     "email": email,
+    #     "address": address,
+    #     "experience": experienceDict,
+    #     "about": about,
+    #     "available": available,
+    #     "profilePhoto": profilePhotoPath,
+    #     "slotDuration": slotDuration,
+    # }
+    # updateData = {k: v for k, v in updateData.items() if v is not None}
 
-    doctorUpdate = DoctorSchema.DoctorUpdate(**updateData)
+    # doctorUpdate = DoctorSchema.DoctorUpdate(**updateData)
 
-    updatedDoctor = DoctorService.update_doctor(id, doctorUpdate,db)
+    updatedDoctor = DoctorService.update_doctor(id, updateData,db)
     if not updatedDoctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
 
