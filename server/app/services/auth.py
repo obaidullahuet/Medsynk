@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import User,Role
 from app.schema import auth as UserSchema
 from sqlalchemy.orm import joinedload, load_only
+from datetime import datetime, timedelta
 
 from app.utils.passwordUtility import hashPassword,verifyPassword
 import jwt
@@ -62,6 +63,7 @@ def login(userData:UserSchema.Login,db:Session):
             joinedload(User.role).joinedload(Role.permissions)).filter(User.id == user.id).first()
         userPermission=userObj.role.permissions
         userPermissions = [permission.name for permission in userPermission]
+        expireTime=datetime.utcnow() + timedelta(hours=1)
         jwtToken=jwt.encode({
             "userRole": userObj.role.name,
             "userRoleId":userObj.roleId,
@@ -69,7 +71,8 @@ def login(userData:UserSchema.Login,db:Session):
                              "id":userObj.id,
                              "email":userObj.email,
                              "firstName":userObj.firstName,
-                             "lastName":userObj.lastName
+                             "lastName":userObj.lastName,
+                             "exp":expireTime
                              
                              }, SECRET_KEY, algorithm=ALGORITHM)
         return {"data": userObj
