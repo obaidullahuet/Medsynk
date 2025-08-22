@@ -1,36 +1,85 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional, Union
+from fastapi import APIRouter, Depends, HTTPException,Form,UploadFile,File
 from sqlalchemy.orm import Session
 from config.database import get_db
-from app.schema.treatment import TreatmentCreate, TreatmentUpdate, TreatmentOut
-from app.services import treatment
+from app.schema import treatment as TreatmentSchema
+from app.services import treatment as TreatmentService
+from app.utils.fileHandler import saveUploadedFile
+import json
 
-router = APIRouter(prefix="/treatments", tags=["Treatments"])
+from app.middlewares.auth_middleware import requirePermission
 
-@router.post("/", response_model=TreatmentOut)
-def create_treatment(treatment: TreatmentCreate, db: Session = Depends(get_db)):
-    return treatment.create_treatment(db, treatment)
 
-@router.get("/", response_model=list[TreatmentOut])
-def get_all_treatments(db: Session = Depends(get_db)):
-    return treatment.get_all_treatments(db)
+router = APIRouter(prefix="/treatment", tags=["Treatments"])
 
-@router.get("/{treatment_id}", response_model=TreatmentOut)
-def get_treatment_by_id(treatment_id: int, db: Session = Depends(get_db)):
-    db_treatment = treatment.get_treatment_by_id(db, treatment_id)
-    if not db_treatment:
+@router.post("/",dependencies=[Depends(requirePermission("treatment-create"))])
+def create_treatment(
+    treatment: TreatmentSchema.TreatmentCreate = Depends(TreatmentSchema.treatmentFormDependency),
+    # image:Optional[UploadFile] = File(None),
+    image: Union[UploadFile, None, str] = File(None),
+    db: Session = Depends(get_db)
+):
+    # print(treatment,image)
+
+    if image and isinstance(image, UploadFile):
+       treatment.image = saveUploadedFile(image)
+    else:
+       treatment.image = None
+
+    new_treatment = TreatmentService.createTreatmentService(db, treatment)
+    return {
+        "message": "Treatment created successfully",
+        "data": new_treatment
+    }
+#  response_model=TreatmentSchema.PaginatedTreatmentOut
+
+@router.get("/",dependencies=[Depends(requirePermission("treatment-view"))])
+def getAllTreatments(page: int = 1, limit: int = 10,filter:str=None, db: Session = Depends(get_db)):
+    allTreatment = TreatmentService.getAllTreatmentsService(page, limit,filter, db)
+    if not allTreatment:
+        raise HTTPException(status_code=404, detail="No Treatments found")
+    return {
+        "message": "All Treatments",
+        **allTreatment
+    }
+
+@router.get("/{id}",dependencies=[Depends(requirePermission("treatment-view"))])
+def getTreatmentById(id: int, db: Session = Depends(get_db)):
+    dbTreatment = TreatmentService.getTreatmentByIdService(db, id)
+    if not dbTreatment:
         raise HTTPException(status_code=404, detail="Treatment not found")
-    return db_treatment
+    return dbTreatment
 
-@router.put("/{treatment_id}", response_model=TreatmentOut)
-def update_treatment(treatment_id: int, update_data: TreatmentUpdate, db: Session = Depends(get_db)):
-    updated_treatment = treatment.update_treatment(db, treatment_id, update_data)
+@router.put("/{id}",dependencies=[Depends(requirePermission("treatment-update"))])
+def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depends(TreatmentSchema.updateTreatmentDependency),    image: UploadFile = File(None), db: Session = Depends(get_db)):
+    print(update_data)
+    if image:
+        update_data.image = saveUploadedFile(image)
+    else:
+        update_data.image = None
+    updated_treatment = TreatmentService.updateTreatmentService(db, id, update_data)
     if not updated_treatment:
         raise HTTPException(status_code=404, detail="Treatment not found")
-    return updated_treatment
+    return {
+        "message": "Treatment updated successfully",
+        "data": updated_treatment
+    }
 
-@router.delete("/{treatment_id}")
-def delete_treatment(treatment_id: int, db: Session = Depends(get_db)):
-    deleted = treatment.delete_treatment(db, treatment_id)
+@router.delete("/{id}",dependencies=[Depends(requirePermission("treatment-delete"))])
+def deleteTreatment(id: int, db: Session = Depends(get_db)):
+    deleted = TreatmentService.deleteTreatmentService(db, id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Treatment not found")
     return {"message": "Treatment deleted successfully"}
+
+
+#  ============ Get the Doctors List against a Treatment ===============
+@router.get("/doctors/{id}")
+def getDoctorsByTreatmentId(id: int, db: Session = Depends(get_db)):
+    doctors = TreatmentService.getDoctorsByTreatmentIdService(id, db)
+    if not doctors:
+        raise HTTPException(status_code=404, detail="Doctors not found")
+    return {
+        "message": "Doctors List",
+        "data": doctors
+    }

@@ -1,40 +1,60 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models import Patient
+from math import ceil
 from app.schema.patient import PatientCreate, PatientUpdate
 
-def get_patient_list(skip: int, limit: int, db: Session):
-    return db.query(Patient).offset(skip).limit(limit).all()
-
-def create_patient_service(db: Session, patient_data: PatientCreate):
-    db_patient = Patient(**patient_data.dict())
-    db.add(db_patient)
+def createPatientService(db: Session, patientData: PatientCreate):
+    dbPatient = Patient(**patientData.dict())
+    db.add(dbPatient)
     db.commit()
-    db.refresh(db_patient)
-    return db_patient
+    db.refresh(dbPatient)
+    return dbPatient
 
-def get_patient_service(db: Session, patient_id: int):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+# ========================= Get Patient Detail service ===========
+
+def getPatientService(db: Session, patientId: int):
+    patient = db.query(Patient).filter(Patient.id == patientId).first()
     if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
+        return None
     return patient
 
-def update_patient_service(db: Session, patient_id: int, patient_update: PatientUpdate):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+# ========== Update Patient Service ===================
+
+def updatePatientService(db: Session, patientId: int, patientUpdate: PatientUpdate):
+    patient = db.query(Patient).filter(Patient.id == patientId).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    for field, value in patient_update.dict(exclude_unset=True).items():
+    for field, value in patientUpdate.dict(exclude_unset=True).items():
         setattr(patient, field, value)
 
     db.commit()
     db.refresh(patient)
     return patient
 
-def delete_patient_service(db: Session, patient_id: int):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+# ========================= Delete Patient Service ===========
+
+def deletePatientService(db: Session, patientId: int):
+    patient = db.query(Patient).filter(Patient.id == patientId).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
     db.delete(patient)
     db.commit()
+    return True
+
+# ========================= Get Patient List Service ===========
+
+def getPatientList(page: int, limit: int, db: Session):
+    skip = (page - 1) * limit
+    patientList = db.query(Patient).offset(skip).limit(limit).all()
+    totalCount = db.query(Patient).count()
+    pageNumber = (skip // limit) + 1 if limit else 1
+    totalPages = ceil(totalCount / limit) if limit else 1
+    return {
+        "total": totalCount,
+        "pageNumber": pageNumber,
+        "totalPages": totalPages,
+        "data": patientList,
+    }

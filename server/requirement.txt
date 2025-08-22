@@ -7,3 +7,6 @@ python-dotenv
 pydantic[email]
 python-multipart
 jinja2
+alembic
+PyJWT 
+passlib[argon2]

@@ -11,7 +11,7 @@ if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
     print(f"Directory '{UPLOAD_DIR}' created successfully.")
 
-def save_uploaded_file(file: UploadFile):
+def saveUploadedFile(file: UploadFile):
     file_ext=os.path.splitext(file.filename)[1]
     unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}{file_ext}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
