@@ -20,6 +20,7 @@
 		"@sveltejs/kit": "^2.26.1",
 		"@sveltejs/vite-plugin-svelte": "^6.1.0",
 		"@tailwindcss/vite": "^4.0.0",
+		"@types/quill": "^2.0.14",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^3.0.0",
@@ -37,6 +38,7 @@
 	"dependencies": {
 		"@iconify/svelte": "^5.0.1",
 		"chart.js": "^4.5.0",
-		"flatpickr": "^4.6.13"
+		"flatpickr": "^4.6.13",
+		"quill": "^2.0.3"
 	}
 }

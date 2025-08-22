@@ -3,7 +3,7 @@ from typing import Optional
 
 
 from pydantic import BaseModel, EmailStr
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 class DoctorBase(BaseModel):
     name: str
@@ -15,6 +15,7 @@ class DoctorBase(BaseModel):
     email: EmailStr
     address: str
     available: Optional[bool] = True
+    availability: Optional[Dict] = None  # e.g., { "monday": [{"start": "09:00", "end": "12:00"}], ... }
 
 class DoctorCreate(DoctorBase):
     pass
@@ -35,3 +36,4 @@ class DoctorUpdate(BaseModel):
     email: Optional[EmailStr]
     address: Optional[str]
     available: Optional[bool]
+    availability: Optional[Dict]

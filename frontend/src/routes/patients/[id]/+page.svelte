@@ -2,16 +2,56 @@
 	import { selectedPatient } from '$lib/store/patientStore';
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 	import { appointment } from '$lib/appointmentsData/appointment';
-
+	import { deletePatient, fetchPatientById } from '$lib/api/patientApi';
+	import { page } from '$app/stores';
 	let patientData: any = null;
 	let upcomingEvents: any[] = [];
 	let historyEvents: any[] = [];
 	let patientNotes: string = 'No notes available for this patient.';
 
-	//  Get patient data from store when page mounts
-	onMount(() => {
+	function computeAgeFromDob(dobStr?: string) {
+		if (!dobStr) return 'N/A';
+		const dob = new Date(dobStr);
+		if (isNaN(dob.getTime())) return 'N/A';
+		const diffMs = Date.now() - dob.getTime();
+		const ageDate = new Date(diffMs);
+		return Math.abs(ageDate.getUTCFullYear() - 1970).toString();
+	}
+
+	function buildPatientDataFromApi(p: any) {
+		const name = p?.name ?? 'Unknown Patient';
+		return {
+			id: p?.id ?? 'N/A',
+			name,
+			image: p?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+			about: p?.about ?? 'No about information provided.',
+			gender: p?.gender ?? 'N/A',
+			dob: p?.dob ?? 'N/A',
+			age: computeAgeFromDob(p?.dob),
+			email: p?.email ?? 'N/A',
+			phone: p?.phone ?? 'N/A',
+			address: p?.address ?? 'N/A',
+			emergencyContact: p?.emergency_contact ?? p?.emergencyContact ?? 'N/A',
+			// UI-specific extras and fallbacks
+			hpi: p?.medicalRecordNo ?? 'N/A',
+			expiryDate: p?.expiryDate ?? 'N/A',
+			status: p?.status ?? 'Active',
+			bodyTemperature: p?.bodyTemperature ?? 37,
+			heartRate: p?.heartRate ?? 72,
+			bloodPressure: p?.bloodPressure ?? '120/80',
+			respiratory: p?.respiratory ?? 16,
+			allergies: Array.isArray(p?.allergies) ? p.allergies : [],
+			medications: Array.isArray(p?.medications) ? p.medications : [],
+			doctor: p?.doctor?.name ?? (p?.doctor_id ? `Assigned Doctor #${p.doctor_id}` : 'Not Assigned'),
+			doctorimage: p?.doctor?.image ?? '/medSynk-logo.png'
+		};
+	}
+
+	//  Get patient data on mount; prefer API by route param, fallback to store
+	onMount(async () => {
 		const patient = get(selectedPatient);
 		if (patient) {
 			patientData = patient;
@@ -34,6 +74,19 @@
 				const latestAppointment = patientAppointments[patientAppointments.length - 1];
 				patientNotes = latestAppointment.notes || 'No notes available for this appointment.';
 			}
+		}
+
+		try {
+			const idFromUrl = $page.params.id;
+			if (idFromUrl) {
+				const res = await fetchPatientById(idFromUrl);
+				const apiPatient = res?.data ?? res;
+				if (apiPatient) {
+					patientData = buildPatientDataFromApi(apiPatient);
+				}
+			}
+		} catch (e) {
+			console.error('Failed to load patient by id', e);
 		}
 	});
 
@@ -60,6 +113,34 @@
 	};
 
 	let currentDate = new Date().toLocaleDateString();
+
+	// async function handleDelete() {
+	// 	if (confirm(`Are you sure you want to delete ${patientData.name}?`)) {
+	// 		try {
+	// 			await deletePatient(patientData.id);
+	// 			alert('Pateint deleted successfully!');
+	// 			// Redirect back to the doctor list page
+	// 			goto('/pateints');
+	// 		} catch (error) {
+	// 			console.error(error);
+	// 			alert('Failed to delete patient.');
+	// 		}
+	// 	}
+	// }
+	async function handleDelete() {
+	if (confirm(`Are you sure you want to delete ${patientData.name}?`)) {
+		try {
+			const result = await deletePatient(patientData.id);
+			if (result.success) {
+				alert('Patient deleted successfully!');
+				goto('/patients'); // fix typo: was '/pateints'
+			}
+		} catch (error) {
+			alert('Failed to delete patient.');
+		}
+	}
+}
+
 </script>
 
 <div class=" rounded-2xl bg-[#f9f5f4] px-2 py-2">
@@ -78,7 +159,7 @@
 						</div>
 					</div> -->
 					<img
-						src={patientData.avatar}
+						src={patientData.image}
 						alt="Patient"
 						class=" h-20 w-20 rounded-full object-cover"
 					/>
@@ -163,7 +244,7 @@
 							</div>
 							<div class="flex justify-between">
 								<span class="text-gray-500">Birthday</span>
-								<span class="font-medium text-gray-700">{patientData.birthday}</span>
+								<span class="font-medium text-gray-700">{patientData.dob}</span>
 							</div>
 							<div class="flex justify-between">
 								<span class="text-gray-500">Age</span>
@@ -173,8 +254,15 @@
 
 						<button
 							class="btn-dropdown-color1 flex w-full items-center justify-center rounded-full px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 lg:mt-8 xl:mt-5"
+							onclick={() => goto(`/patients/${patientData.id}/edit`)}
 						>
 							Edit Patient Data
+						</button>
+						<button
+							class="btn-dropdown-color1 flex w-full items-center justify-center rounded-full px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 lg:mt-8 xl:mt-5"
+							onclick={handleDelete}
+						>
+							Delete Patient Data
 						</button>
 					</div>
 				</div>
@@ -393,7 +481,7 @@
 					<div class="rounded-2xl bg-white lg:text-center">
 						<div class="rounded-2xl bg-[#f9f5f4] p-2">
 							<img
-								src={patientData.doctorAvatar}
+								src={patientData.doctorimage}
 								alt="Doctor"
 								class="mb-3 h-16 w-16 rounded-full object-cover lg:mx-auto"
 							/>

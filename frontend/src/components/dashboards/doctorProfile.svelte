@@ -1,9 +1,36 @@
 <script>
 	// import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
+	import { deleteDoctor } from '$lib/api/doctorsApi';
+	import { goto } from '$app/navigation';
 	let { doctor } = $props();
+	import { env } from '$env/dynamic/public';
 
+    const BASE_URL = env.PUBLIC_API_BASE_URL || '';
 	import { onMount } from 'svelte';
+
+	async function handleDelete() {
+		if (confirm(`Are you sure you want to delete Dr. ${doctor.name}?`)) {
+			try {
+				await deleteDoctor(doctor.id);
+				alert('Doctor deleted successfully!');
+				// Redirect back to the doctor list page
+				goto('/doctors');
+			} catch (error) {
+				console.error(error);
+				alert('Failed to delete doctor.');
+			}
+		}
+	}
+
+		// Edit handler
+		function handleEdit() {
+			console.log("doctorrrrrrrrrrr",doctor)
+		goto(`/doctors/${doctor.id}/edit`);
+		
+	}
+
+
 	import { Chart, registerables } from 'chart.js';
 	Chart.register(...registerables);
 
@@ -316,65 +343,83 @@
 			>
 				<!-- Tablet: Profile Info in 3 Columns on md -->
 				<div
-					class="flex flex-col md:flex-row md:items-stretch md:divide-x md:divide-gray-300 lg:flex-col lg:divide-x-0"
-				>
-					<!-- Column 1: Image + Name -->
-					<div
-						class="flex flex-col items-center md:w-1/3 md:items-start md:pr-4 lg:w-full lg:items-center lg:pr-0"
-					>
-						<div class="relative">
-							<img
-								class="mx-auto h-20 w-20 rounded-full shadow-md ring-4 ring-white sm:h-24 sm:w-24"
-								src={doctor.photo}
-								alt={doctor.name}
-							/>
-							<span
-								class="absolute right-1 bottom-1 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-white"
-							></span>
-						</div>
-						<h2
-							class="mt-3 text-center text-lg font-extrabold text-gray-800 sm:text-xl md:text-lg lg:text-center lg:text-2xl"
-						>
-							{doctor.name}
-						</h2>
-						<p
-							class="text-center text-xs font-medium text-gray-500 sm:text-sm md:text-left lg:text-center"
-						>
-							{doctor.id} •
-							<span class="text-xs font-medium text-black sm:text-sm">{doctor.specialty}</span>
-						</p>
-					</div>
+	class="flex flex-col md:flex-row md:items-stretch md:divide-x md:divide-gray-300 lg:flex-col lg:divide-x-0"
+>
+	<!-- Column 1: Image + Name -->
+	<div
+		class="flex flex-col items-center md:w-1/3 md:items-start md:pr-4 lg:w-full lg:items-center lg:pr-0"
+	>
+		<div class="relative">
+			<img
+				class="mx-auto h-20 w-20 rounded-full shadow-md ring-4 ring-white sm:h-24 sm:w-24"
+				src={`${BASE_URL}/${doctor.profilePhoto}`}
+				alt={doctor.name}
+			/>
+			<span
+				class="absolute right-1 bottom-1 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-white"
+			></span>
+		</div>
 
-					<!-- Column 2: About -->
-					<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:px-4 lg:mt-4 lg:w-full lg:px-0">
-						<div class="pt-3">
-							<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
-								About
-							</h3>
-							<p class="mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">{doctor.about}</p>
-						</div>
-					</div>
+		<!-- Buttons under profile image -->
+		<div class="mt-3 flex flex-wrap justify-center gap-2 md:justify-start lg:justify-center">
+			<button
+				class="rounded-lg bg-blue-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-600 sm:px-4 sm:py-1.5 sm:text-sm"
+				onclick={handleEdit}
+			>
+				Edit
+			</button>
+			<button
+				class="rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-red-600 sm:px-4 sm:py-1.5 sm:text-sm"
+				onclick={handleDelete}
+			>
+				Delete
+			</button>
+		</div>
 
-					<!-- Column 3: Contact Info -->
-					<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:pl-4 lg:mt-4 lg:w-full lg:pl-0">
-						<div class="pt-3">
-							<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
-								Contact Info
-							</h3>
-							<div class="mt-2 space-y-2">
-								<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
-									📞 <span class="truncate">{doctor.phone}</span>
-								</p>
-								<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
-									📧 <span class="truncate">{doctor.email}</span>
-								</p>
-								<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
-									📍 <span class="truncate">{doctor.address}</span>
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
+		<h2
+			class="mt-3 text-center text-lg font-extrabold text-gray-800 sm:text-xl md:text-lg lg:text-center lg:text-2xl"
+		>
+			{doctor.name}
+		</h2>
+		<p
+			class="text-center text-xs font-medium text-gray-500 sm:text-sm md:text-left lg:text-center"
+		>
+			{doctor.id} •
+			<span class="text-xs font-medium text-black sm:text-sm">{doctor.specialty}</span>
+		</p>
+	</div>
+
+	<!-- Column 2: About -->
+	<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:px-4 lg:mt-4 lg:w-full lg:px-0">
+		<div class="pt-3">
+			<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
+				About
+			</h3>
+			<p class="mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">{doctor.about}</p>
+		</div>
+	</div>
+
+	<!-- Column 3: Contact Info -->
+	<div class="mt-4 flex flex-col md:mt-0 md:w-1/3 md:pl-4 lg:mt-4 lg:w-full lg:pl-0">
+		<div class="pt-3">
+			<h3 class="flex items-center gap-2 text-base font-semibold text-gray-700 sm:text-lg">
+				Contact Info
+			</h3>
+			<div class="mt-2 space-y-2">
+				<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
+					📞 <span class="truncate">{doctor.contact}</span>
+				</p>
+				<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
+					📧 <span class="truncate">{doctor.email}</span>
+				</p>
+				<p class="flex items-center gap-2 text-xs text-gray-700 sm:text-sm">
+					📍 <span class="truncate">{doctor.address}</span>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
 
 				<!-- Experiences -->
 				<div class="mt-4 py-4 sm:mt-5 md:mt-6 lg:mt-4">
@@ -396,7 +441,7 @@
 						<ul
 							class="mt-2 flex flex-col gap-3 sm:mt-3 md:flex-row md:flex-wrap md:gap-4 lg:flex-col"
 						>
-							{#each doctor.experiences as exp}
+							{#each doctor.experience as exp}
 								<li
 									class="min-w-[200px] flex-1 rounded-lg border border-gray-200 bg-gray-50 p-2 shadow-sm sm:p-3"
 								>

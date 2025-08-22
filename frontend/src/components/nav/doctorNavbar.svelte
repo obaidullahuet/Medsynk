@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	const dispatch = createEventDispatcher();
 
@@ -13,12 +14,9 @@
 	// Props using the new syntax with proper typing
 	let { specializations = [], statuses = [] } = $props();
 
-	// Modal state & doctor form
-	let showModal = $state(false);
-	let doctor = $state({ name: '', specialty: '', phone: '', about: '', image: null });
-	let imagePreview = $state('');
+	// Add button navigates to add page instead of modal
 
-	function toggleDropdown(type) {
+	function toggleDropdown(type: 'specialization' | 'status') {
 		if (type === 'specialization') {
 			showSpecializationDropdown = !showSpecializationDropdown;
 			showStatusDropdown = false;
@@ -36,47 +34,25 @@
 		});
 	}
 
-	function selectSpecialization(spec) {
+	function selectSpecialization(spec: string) {
 		selectedSpecialization = spec;
 		showSpecializationDropdown = false;
 		applyFilter();
 	}
 
-	function selectStatus(status) {
+	function selectStatus(status: string) {
 		selectedStatus = status;
 		showStatusDropdown = false;
 		applyFilter();
 	}
 
-	function handleSearch(e) {
-		searchQuery = e.target.value;
+	function handleSearch(e: Event) {
+		searchQuery = (e.target as HTMLInputElement).value;
 		applyFilter();
 	}
 
-	// Modal Handlers
-	function openModal() {
-		showModal = true;
-	}
-
-	function closeModal() {
-		showModal = false;
-		doctor = { name: '', specialty: '', phone: '', about: '', image: null };
-		imagePreview = '';
-	}
-
-	function handleImageUpload(e) {
-		const file = e.target.files[0];
-		if (file) {
-			doctor.image = file;
-			const reader = new FileReader();
-			reader.onload = (ev) => (imagePreview = ev.target.result);
-			reader.readAsDataURL(file);
-		}
-	}
-
-	function saveDoctor() {
-		dispatch('addDoctor', doctor);
-		closeModal();
+	function goToAddDoctor() {
+		goto('/doctors/add');
 	}
 </script>
 
@@ -131,7 +107,7 @@
 				</button>
 
 				<button
-					onclick={openModal}
+					onclick={goToAddDoctor}
 					class="btn-dropdown-color1 flex h-9 w-9 items-center justify-center rounded-full shadow-md md:h-9 md:w-9"
 				>
 					<svg
@@ -182,7 +158,7 @@
 					<div
 						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-44 rounded-md border shadow-lg md:w-32 lg:w-44"
 					>
-						{#each ['All', ...specializations] as spec}
+						{#each [...specializations] as spec}
 							<button
 								onclick={() => selectSpecialization(spec)}
 								class="dropdown-item-color block w-full px-4 py-2.5 text-[11px] md:px-2.5 md:py-1.5 lg:px-4 lg:py-2.5 lg:text-sm"
@@ -220,7 +196,7 @@
 					<div
 						class="dropdown-menu-color absolute left-0 z-10 mt-1 w-36 rounded-md border shadow-lg md:w-24 lg:w-36"
 					>
-						{#each ['All', ...statuses] as status}
+						{#each [...statuses] as status}
 							<button
 								onclick={() => selectStatus(status)}
 								class="dropdown-item-color block w-full px-4 py-2.5 text-[11px] md:px-2.5 md:py-1.5 lg:px-4 lg:py-2.5 lg:text-sm"
@@ -263,7 +239,7 @@
 
 			<button
 				class="add-btn-lg-color inline-flex items-center justify-center rounded-full px-4 py-2.5 text-[11px] font-medium whitespace-nowrap focus:outline-none md:min-w-[70px] md:px-2.5 md:py-1.5 md:text-[10px] lg:min-w-[110px] lg:px-4 lg:py-2.5 lg:text-sm"
-				onclick={openModal}
+				onclick={goToAddDoctor}
 			>
 				<svg
 					class="mr-2 h-3 w-3 md:mr-1 md:h-2.5 md:w-2.5 lg:mr-2 lg:h-4 lg:w-4"
@@ -282,88 +258,5 @@
 			</button>
 		</div>
 	</div>
+ 
 </div>
-<!-- Modal Implementation -->
-{#if showModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-		<div
-			class="relative w-[90%] max-w-md scale-95 transform rounded-2xl border border-white/40 bg-white/80 p-6 shadow-2xl backdrop-blur-lg transition-all duration-300 ease-out"
-		>
-			<!-- Close Button -->
-			<button
-				onclick={closeModal}
-				class="absolute top-3 right-4 text-2xl font-bold text-gray-500 transition hover:text-red-500"
-			>
-				✕
-			</button>
-
-			<!-- Title -->
-			<h2 class="mb-6 text-center text-xl font-bold text-gray-800">➕ Add New Doctor</h2>
-
-			<!-- Circular Image Upload -->
-			<div class="mb-5 flex justify-center">
-				<label
-					class="relative flex h-28 w-28 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-gray-300 shadow-md transition-all duration-300 hover:border-blue-400 hover:shadow-blue-100"
-				>
-					{#if imagePreview}
-						<img
-							src={imagePreview}
-							alt="Preview"
-							class="h-28 w-28 rounded-full border-2 border-white object-cover shadow-md"
-						/>
-					{:else}
-						<span class="text-xs text-gray-500">Upload Photo</span>
-					{/if}
-					<input type="file" accept="image/*" class="hidden" onchange={handleImageUpload} />
-				</label>
-			</div>
-
-			<!-- Inputs -->
-			<div class="space-y-3">
-				<input
-					type="text"
-					placeholder="Doctor Name"
-					bind:value={doctor.name}
-					class="w-full rounded-lg border border-gray-300 bg-white/70 px-4 py-2 text-sm shadow-sm transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-				/>
-
-				<input
-					type="text"
-					placeholder="Specialty"
-					bind:value={doctor.specialty}
-					class="w-full rounded-lg border border-gray-300 bg-white/70 px-4 py-2 text-sm shadow-sm transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-				/>
-
-				<input
-					type="tel"
-					placeholder="Phone"
-					bind:value={doctor.phone}
-					class="w-full rounded-lg border border-gray-300 bg-white/70 px-4 py-2 text-sm shadow-sm transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-				/>
-
-				<textarea
-					placeholder="About Doctor"
-					bind:value={doctor.about}
-					rows="3"
-					class="w-full resize-none rounded-lg border border-gray-300 bg-white/70 px-4 py-2 text-sm shadow-sm transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-				></textarea>
-			</div>
-
-			<!-- Action Buttons -->
-			<div class="mt-6 flex justify-end gap-3">
-				<button
-					onclick={closeModal}
-					class="rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 shadow-md transition hover:bg-gray-300 hover:shadow-lg"
-				>
-					Cancel
-				</button>
-				<button
-					onclick={saveDoctor}
-					class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-md transition hover:bg-blue-700 hover:shadow-lg"
-				>
-					Save Doctor
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}

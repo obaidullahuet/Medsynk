@@ -3,8 +3,8 @@ from app.schema import doctor as DoctorSchema
 from app.models import Doctor
 from sqlalchemy.orm import Session
 
-def create_doctor(db:Session,doctor:DoctorSchema.DoctorCreate):
-    new_doctor = Doctor(**doctor)
+def create_doctor(db: Session, doctor_data: dict):
+    new_doctor = Doctor(**doctor_data)
     db.add(new_doctor)
     db.commit()
     db.refresh(new_doctor)

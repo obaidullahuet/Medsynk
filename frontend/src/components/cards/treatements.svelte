@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { env } from '$env/dynamic/public';
 
-	let { id, title, type, description, image, doctors } = $props();
+const BASE_URL = env.PUBLIC_API_BASE_URL || '';
+	let { id, name, treatmentType, about, image, doctors } = $props();
 
 	function openDetails() {
 		dispatch('select', { id });
@@ -12,10 +14,7 @@
 
 
 
-
-
-
-<!--  Mobile Layout (<= 425px) -->
+<!--(<= 425px) -->
 <div class="space-y-4 sm:hidden">
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore event_directive_deprecated -->
@@ -25,17 +24,17 @@
 		on:click={openDetails}
 	>
 		<!-- Left: Image -->
-		<img src={image} alt={title} class="h-28 w-24 rounded-lg object-cover" />
+		<img src={`${BASE_URL}/${image}`} alt={name} class="h-28 w-24 rounded-lg object-cover" />
 
 		<!-- Right: Content -->
 		<div class="flex-1">
 			<span
 				class="btn-dropdown-color1 inline-block rounded-full px-2 py-0.5 text-xs font-medium text-blue-800"
 			>
-				{type}
+				{treatmentType}
 			</span>
-			<h2 class="mt-1 text-base font-bold text-gray-900">{title}</h2>
-			<p class="mt-1 line-clamp-2 text-xs text-gray-600">{description}</p>
+			<h2 class="mt-1 text-base font-bold text-gray-900">{name}</h2>
+			<p class="mt-1 line-clamp-2 text-xs text-gray-600">{about}</p>
 			<div class="mt-1 flex items-center gap-1 text-xs text-gray-700">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -67,18 +66,18 @@
 >
 	<!-- Image -->
 	<div class="overflow-hidden rounded-2xl">
-		<img src={image} alt={title} class="h-36 w-full object-cover md:h-40" />
+		<img src={`${BASE_URL}/${image}`} alt={name} class="h-36 w-full object-cover md:h-40" />
 	</div>
 
 	<!-- Content -->
 	<span
 		class="btn-dropdown-color1 mt-3 inline-block w-auto max-w-max rounded-full px-3 py-1 text-sm font-medium text-blue-800"
 	>
-		{type}
+		{treatmentType}
 	</span>
 
-	<h2 class="mt-2 text-base font-semibold text-gray-900 md:text-lg">{title}</h2>
-	<p class="mt-1 line-clamp-3 text-xs text-gray-600 md:text-sm">{description}</p>
+	<h2 class="mt-2 text-base font-semibold text-gray-900 md:text-lg">{name}</h2>
+	<p class="mt-1 line-clamp-3 text-xs text-gray-600 md:text-sm">{about}</p>
 
 	<div class="mt-2 flex items-center gap-1 text-xs text-gray-700 md:mt-3 md:text-sm">
 		<svg

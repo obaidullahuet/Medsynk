@@ -14,12 +14,10 @@
 		selectedSort = 'Treatment'
 	} = $props();
 
-	// Local state for dropdowns
 	let showTreatmentDropdown = $state(false);
 	let showDoctorDropdown = $state(false);
 	let showSortDropdown = $state(false);
 
-	// Internal state that syncs with props
 	let internalSearchTerm = $state(searchTerm);
 	let internalSelectedTreatment = $state(selectedTreatment);
 	let internalSelectedDoctor = $state(selectedDoctor);
@@ -83,6 +81,10 @@
 			showDoctorDropdown = false;
 			showSortDropdown = false;
 		}
+	}
+
+	function handleAddTreatment() {
+		dispatch('addTreatment');
 	}
 
 	// Check if any filters are active
@@ -231,35 +233,12 @@
 				</div>
 			</div>
 
-			<!-- Clear Filters Button -->
-			<!-- {#if hasActiveFilters}
-				<button
-					class="text-sm text-gray-500 underline transition-colors duration-200 hover:text-gray-700"
-					onclick={clearFilters}
-				>
-					Clear filters
-				</button>
-			{/if} -->
-
-			<!-- Filter Icon -->
+			<!-- Add Button -->
 			<button
-				class="add-btn-lg-color rounded-full p-2.5 text-gray-400 transition-colors duration-200 hover:text-gray-600"
-				onclick={() => toggleDropdown('treatment')}
+				class="add-btn-lg-color rounded-full p-2.5 text-gray-400 text-sm font-normal transition-colors duration-200 hover:text-gray-600"
+				onclick={handleAddTreatment}
 			>
-				<svg
-					class="h-4 w-4"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
-					/>
-				</svg>
+				Add Treatment
 			</button>
 		</div>
 	</div>

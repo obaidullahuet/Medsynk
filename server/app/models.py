@@ -45,6 +45,7 @@ class Doctor(Base):
     email = Column(String(100), unique=True)
     address = Column(Text)
     available = Column(Boolean, default=True)
+    availability = Column(JSON, nullable=True)
 
     patients = relationship("Patient", back_populates="doctor")
     appointments = relationship("Appointment", back_populates="doctor")

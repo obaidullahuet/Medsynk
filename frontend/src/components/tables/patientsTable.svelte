@@ -2,33 +2,44 @@
 	import { goto } from '$app/navigation';
 	import { selectedPatient } from '$lib/store/patientStore';
 
-	export let patients;
+	type PatientRow = {
+		id: number;
+		name: string;
+		avatar: string;
+		date: string;
+		time: string;
+		doctor: string;
+		treatment: string;
+		status: string;
+	};
+
+	export let patients: PatientRow[];
 
 	let showDeleteModal = false;
 	let selectAll = false;
-	let selected = [];
+	let selected: number[] = [];
 
 	function toggleSelectAll() {
 		selectAll = !selectAll;
 		if (selectAll) {
-			const newSelections = patients.map((i) => i.id);
+			const newSelections = patients.map((i: PatientRow) => i.id);
 			selected = Array.from(new Set([...selected, ...newSelections]));
 		} else {
-			selected = selected.filter((id) => !patients.some((i) => i.id === id));
+			selected = selected.filter((id: number) => !patients.some((i: PatientRow) => i.id === id));
 		}
 	}
 
-	function toggleSelection(id) {
-		selected = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+	function toggleSelection(id: number) {
+		selected = selected.includes(id) ? selected.filter((x: number) => x !== id) : [...selected, id];
 	}
 
-	const getStatusClass = (status: any) => {
+	const getStatusClass = (status: string) => {
 		if (status === 'Completed') return 'bg-green-100 text-gray-600';
 		if (status === 'In Progress') return 'bg-red-100 text-gray-600';
 		return 'bg-gray-100 text-gray-600';
 	};
 
-	const goToDetails = (patient) => {
+	const goToDetails = (patient: PatientRow) => {
 		selectedPatient.set(patient);
 		goto(`/patients/${patient.id}`);
 	};
@@ -40,7 +51,7 @@
 		showDeleteModal = false;
 	}
 	function confirmDelete() {
-		patients = patients.filter((i) => !selected.includes(i.id));
+		patients = patients.filter((i: PatientRow) => !selected.includes(i.id));
 		selected = [];
 		showDeleteModal = false;
 	}
@@ -91,6 +102,7 @@
 								<button
 									class="text-red-500 hover:text-red-700"
 									title="Delete Patient"
+									aria-label="Delete Patient"
 									on:click={openDeleteModal}
 								>
 									<svg

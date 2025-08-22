@@ -3,6 +3,9 @@ from fastapi import HTTPException, status
 from app.models import Patient
 from app.schema.patient import PatientCreate, PatientUpdate
 
+def get_patient_list(skip: int, limit: int, db: Session):
+    return db.query(Patient).offset(skip).limit(limit).all()
+
 def create_patient_service(db: Session, patient_data: PatientCreate):
     db_patient = Patient(**patient_data.dict())
     db.add(db_patient)

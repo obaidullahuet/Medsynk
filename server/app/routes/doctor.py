@@ -21,6 +21,7 @@ def create_doctor(
     experience: Optional[str] = Form(...), 
     about: Optional[str] = Form(None),
     available: Optional[bool] = Form(True),
+    availability: Optional[str] = Form(None),
     profilePhoto: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
@@ -41,6 +42,14 @@ def create_doctor(
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="'experience' must be valid JSON")
 
+    # Parse availability JSON string
+    availability_dict = None
+    if availability:
+        try:
+            availability_dict = json.loads(availability)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="'availability' must be valid JSON")
+
     # Create Pydantic model
     doctor = DoctorSchema.DoctorCreate(
         name=name,
@@ -51,15 +60,16 @@ def create_doctor(
         experience=experience_dict, 
         about=about,
         available=available,
-        profilePhoto=profilePhotoPath
+        profilePhoto=profilePhotoPath,
+        availability=availability_dict
     )
 
     print("Doctor object:", doctor)
 
-    # created_doctor = DoctorService.create_doctor(db, doctor)
+    created_doctor = DoctorService.create_doctor(db, doctor.dict())
     return {
         "message": "Doctor Created",
-        # "data": created_doctor
+        "data": created_doctor
     }
 
 

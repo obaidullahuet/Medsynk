@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { fetchAppointments, deleteAppointment, updateAppointment } from '$lib/api/appointmentsApi';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import { fetchDoctors } from '$lib/api/doctorsApi';
+	import { getPatients } from '$lib/api/patientApi';
+	import { getTreatments } from '$lib/api/treatmentsApi';
 
 	let currentDate = new Date();
 	let searchQuery = '';
@@ -10,85 +15,32 @@
 	let visibleDaysCount = 6;
 	let days: any[] = [];
 
-	const events = [
-		{
-			doctor: 'Dr. Olivia Grant',
-			title: 'Facial Rejuvenation',
-			start: '9:00 AM',
-			end: '10:00 AM',
-			room: 'OR 1',
-			date: '2025-08-01',
-			color: 'bg-rose-100 border border-rose-300'
-		},
-		{
-			doctor: 'Dr. Sophia Clark',
-			title: 'Chemical Peels',
-			start: '10:30 AM',
-			end: '11:30 AM',
-			room: 'OR 3',
-			date: '2025-08-01',
-			color: 'bg-blue-100 border border-blue-300'
-		},
-		{
-			doctor: 'Dr. James Lawson',
-			title: 'Scar Removal Surgery',
-			start: '11:30 AM',
-			end: '12:30 AM',
-			room: 'OR 1',
-			date: '2025-07-28',
-			color: 'bg-purple-100 border border-purple-300'
-		},
-		{
-			doctor: 'Dr. Megan Foster',
-			title: 'Tattoo Removal',
-			start: '11:20 AM',
-			end: '12:20 PM',
-			room: 'OR 2',
-			date: '2025-08-02',
-			color: 'bg-gray-200 border border-gray-300'
-		},
-		{
-			doctor: 'Dr. Emily Ross',
-			title: 'Acne Treatment',
-			start: '10:00 AM',
-			end: '11:00 AM',
-			room: 'OR 2',
-			date: '2025-08-02',
-			color: 'bg-emerald-100 border border-emerald-300'
-		},
-		{
-			doctor: 'Dr. Olivia Grant',
-			title: 'Botox Injections',
-			start: '12:00 PM',
-			end: '1:00 PM',
-			room: 'OR 3',
-			date: '2025-07-29',
-			color: 'bg-green-100 border border-green-300'
-		},
-		{
-			doctor: 'Dr. Richard Allen',
-			title: 'Liposuction Consultation',
-			start: '1:00 PM',
-			end: '2:00 PM',
-			room: 'OR 4',
-			date: '2025-08-02',
-			color: 'bg-yellow-100 border border-yellow-300'
-		},
-		{
-			doctor: 'Dr. Sophia Clark',
-			title: 'Skin Brightening',
-			start: '9:30 AM',
-			end: '10:30 AM',
-			room: 'OR 1',
-			date: '2025-07-31',
-			color: 'bg-pink-100 border border-pink-300'
-		}
-	];
+	let events: any[] = [];
+	let showEditModal = false;
+	let editingEvent: any = null;
+	let doctors: any[] = [];
+	let patients: any[] = [];
+	let treatments: any[] = [];
+	let editDoctorId = '';
+	let editPatientId = '';
+	let editTreatmentId = '';
+	let editDate = '';
+	let editTime = '';
 
 	if (browser) {
 		onMount(() => {
 			updateScreenWidth();
 			window.addEventListener('resize', updateScreenWidth);
+			loadAppointments();
+			Promise.all([
+				fetchDoctors(1, 100),
+				getPatients(1, 100),
+				getTreatments(1, 100)
+			]).then(([d, p, t]) => {
+				doctors = d?.data || d || [];
+				patients = p?.data || p || [];
+				treatments = t?.data || t || [];
+			}).catch(console.error);
 		});
 
 		onDestroy(() => {
@@ -102,7 +54,6 @@
 		visibleDaysCount = screenWidth < 640 ? 3 : screenWidth < 1024 ? 4 : 6;
 		days = getWeekDays(currentDate).slice(0, visibleDaysCount);
 	}
-
 
 	$: uniqueDoctors = Array.from(new Set(events.map((e) => e.doctor)));
 
@@ -125,8 +76,8 @@
 		days = getWeekDays(currentDate).slice(0, visibleDaysCount);
 	}
 
-	const startHour = 9;
-	const endHour = 14;
+	const startHour = 8; // 8 AM
+	const endHour = 23; // 11 PM
 	const hourHeight = 100;
 
 	function toMinutes(timeStr: string) {
@@ -135,6 +86,133 @@
 		if (meridiem === 'PM' && hour !== 12) hour += 12;
 		if (meridiem === 'AM' && hour === 12) hour = 0;
 		return hour * 60 + min;
+	}
+
+	function minutesTo12h(totalMinutes: number) {
+		totalMinutes = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+		const hours24 = Math.floor(totalMinutes / 60);
+		const minutes = totalMinutes % 60;
+		const period = hours24 >= 12 ? 'PM' : 'AM';
+		let hours12 = hours24 % 12;
+		if (hours12 === 0) hours12 = 12;
+		return `${hours12}:${String(minutes).padStart(2, '0')} ${period}`;
+	}
+
+	function to12Hour(hhmm: string) {
+		const [hh = '0', mm = '0'] = hhmm.split(':');
+		const hours = Number(hh);
+		const minutes = Number(mm);
+		const period = hours >= 12 ? 'PM' : 'AM';
+		let h12 = hours % 12;
+		if (h12 === 0) h12 = 12;
+		return `${h12}:${String(minutes).padStart(2, '0')} ${period}`;
+	}
+
+	function addMinutesToTime(time12h: string, delta: number) {
+		return minutesTo12h(toMinutes(time12h) + delta);
+	}
+
+	function pickColor(status?: string) {
+		switch ((status || '').toLowerCase()) {
+			case 'scheduled':
+				return 'bg-blue-100 border border-blue-300';
+			case 'completed':
+				return 'bg-green-100 border border-green-300';
+			case 'cancelled':
+				return 'bg-rose-100 border border-rose-300';
+			default:
+				return 'bg-gray-100 border border-gray-300';
+		}
+	}
+
+	async function loadAppointments() {
+		try {
+			const res: any = await fetchAppointments();
+			let list: any[] = [];
+			if (Array.isArray(res)) {
+				list = res;
+			} else if (Array.isArray(res?.data?.data)) {
+				list = res.data.data;
+			} else if (Array.isArray(res?.data)) {
+				list = res.data;
+			}
+
+			events = list.map((a: any) => {
+				const timeRaw: string = String(a.scheduledTime || '');
+				const hhmm = timeRaw.slice(0, 5); // HH:MM
+				const start = to12Hour(hhmm);
+				const end = addMinutesToTime(start, 60);
+				return {
+					id: a?.id,
+					doctor: a?.doctorId?.name || 'Unknown Doctor',
+					title: a?.treatmentId?.name || a?.status || 'Appointment',
+					start,
+					end,
+					room: 'OR 1',
+					date: a?.scheduledDate || '',
+					color: pickColor(a?.status)
+				};
+			});
+		} catch (err) {
+			console.error('Failed to load appointments', err);
+		}
+	}
+
+	async function confirmAndDeleteAppointment(appointmentId: number | string) {
+		if (!appointmentId) return;
+		const ok = confirm('Delete this appointment?');
+		if (!ok) return;
+		try {
+			await deleteAppointment(appointmentId);
+			events = events.filter((ev: any) => ev.id !== appointmentId);
+		} catch (err) {
+			console.error('Failed to delete appointment', err);
+			alert('Failed to delete appointment');
+		}
+	}
+
+	function openEditModal(e: any) {
+		editingEvent = e;
+		editDoctorId = '';
+		editPatientId = '';
+		editTreatmentId = '';
+		editDate = e?.date ?? '';
+		if (e?.start) {
+			const [time, meridiem] = String(e.start).split(' ');
+			let [h, m] = time.split(':').map(Number);
+			if (meridiem === 'PM' && h !== 12) h += 12;
+			if (meridiem === 'AM' && h === 12) h = 0;
+			editTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+		}
+		showEditModal = true;
+	}
+
+	async function saveEdit() {
+		if (!editingEvent?.id) return;
+		const payload: any = {
+			status: 'scheduled'
+		};
+		if (editDoctorId) payload.doctorId = Number(editDoctorId);
+		if (editPatientId) payload.patientId = Number(editPatientId);
+		if (editTreatmentId) payload.treatmentId = Number(editTreatmentId);
+		if (editDate) payload.scheduledDate = editDate;
+		if (editTime) payload.scheduledTime = editTime.length === 5 ? `${editTime}:00` : editTime;
+		try {
+			await updateAppointment(editingEvent.id, payload);
+			events = events.map((ev: any) => ev.id === editingEvent.id ? {
+				...ev,
+				doctor: editDoctorId ? (doctors.find((d: any) => `${d.id}` === `${editDoctorId}`)?.name || ev.doctor) : ev.doctor,
+				title: editTreatmentId ? (treatments.find((t: any) => `${t.id}` === `${editTreatmentId}`)?.name || ev.title) : ev.title,
+				date: editDate || ev.date,
+				start: editTime ? to12Hour(editTime) : ev.start,
+				end: editTime ? addMinutesToTime(to12Hour(editTime), 60) : ev.end
+			} : ev);
+			showEditModal = false;
+			editingEvent = null;
+		} catch (err) {
+			console.error('Failed to update appointment', err);
+			alert('Failed to update appointment');
+		}
 	}
 
 	function getTop(timeStr: string) {
@@ -183,9 +261,13 @@
 		return matchesDoctor && matchesSearch;
 	}
 
-	function goToToday() {
-		currentDate = new Date();
-		updateScreenWidth(); // recalc days for new week
+	function goToCreateAppointment() {
+		goto('/appointments/add');
+	}
+
+	function goToEditAppointment(id: number | string) {
+		if (!id) return;
+		goto(`/appointments/${id}/edit`);
 	}
 
 	function goToPreviousWeek() {
@@ -223,6 +305,14 @@
 		currentDate = monthOptions[selectedIndex].value;
 		updateScreenWidth();
 	}
+
+	function formatHourLabel(h: number) {
+		const hours24 = ((h % 24) + 24) % 24;
+		const period = hours24 >= 12 ? 'PM' : 'AM';
+		let hours12 = hours24 % 12;
+		if (hours12 === 0) hours12 = 12;
+		return `${hours12}:00 ${period}`;
+	}
 </script>
 
 <!-- Filter Navbar -->
@@ -232,10 +322,10 @@
 		<div class=" mb-4 flex flex-col-reverse md:flex-row  justify-between gap-2 sm:gap-4">
 			<div class="flex items-center gap-2 sm:gap-3">
 				<button
-					onclick={goToToday}
+					onclick={goToCreateAppointment}
 					class="add-btn-lg-color add-text-lg-color1 rounded-full px-3 py-1 text-xs font-semibold transition-colors hover:bg-emerald-200 sm:text-sm"
 				>
-					Today
+					Create Appointment
 				</button>
 
 				<div class="relative">
@@ -340,6 +430,7 @@
 						onclick={goToNextWeek}
 						class="btn-dropdown-color1 rounded-full p-2 transition-colors hover:bg-emerald-200 focus:ring-2 focus:ring-emerald-300"
 						title="Next Week"
+						aria-label="Next Week"
 					>
 						<svg
 							class="h-4 w-4 text-emerald-800"
@@ -375,7 +466,7 @@
 				{/each}
 			</div>
 
-			<div class="flex gap-2 overflow-hidden sm:gap-3">
+			<div class="flex gap-2 overflow-hidden sm:gap-3 max-h-[70vh] overflow-y-auto pr-2">
 				<div class="relative w-[70px] sm:w-[100px]" style={`height:${totalHeight}px`}>
 					{#each Array(endHour - startHour + 1)
 						.fill(0)
@@ -384,7 +475,7 @@
 							class="absolute w-full border-t border-gray-200 pl-1 text-[10px] text-gray-600 sm:pl-2 sm:text-xs"
 							style={`top:${i * hourHeight}px`}
 						>
-							{h <= 12 ? h : h - 12}:00 {h < 12 ? 'AM' : 'PM'}
+							{formatHourLabel(h)}
 						</div>
 					{/each}
 				</div>
@@ -409,9 +500,20 @@
 								${isFiltered && matchesCurrentFilter ? 'ring-opacity-60 z-10 transform shadow-lg ring-2 ring-blue-400 hover:scale-[1.05] hover:shadow-xl' : 'hover:scale-[1.02] hover:shadow-lg'}
 								${isFiltered && matchesCurrentFilter ? 'animate-pulse-slow' : ''}
 							`}
-									style={`top:${getTop(e.start) - (isFiltered && matchesCurrentFilter ? 2 : 0)}px; height:${getHeight(e.start, e.end) + (isFiltered && matchesCurrentFilter ? 4 : 0)}px; min-height:${isFiltered && matchesCurrentFilter ? 55 : 50}px;`}
-									title={`${e.room} - ${e.title} with ${e.doctor}${isFiltered && matchesCurrentFilter ? ' (Filtered Result)' : ''}`}
+								style={`top:${getTop(e.start) - (isFiltered && matchesCurrentFilter ? 2 : 0)}px; height:${getHeight(e.start, e.end) + (isFiltered && matchesCurrentFilter ? 4 : 0)}px; min-height:${isFiltered && matchesCurrentFilter ? 55 : 50}px;`}
+								title={`${e.room} - ${e.title} with ${e.doctor}${isFiltered && matchesCurrentFilter ? ' (Filtered Result)' : ''}`}
 								>
+									<button onclick={(ev) => { ev.stopPropagation(); goToEditAppointment(e.id); }} class="absolute top-1 right-6 rounded p-0.5 text-gray-500 hover:text-blue-600 bg-white/70 hover:bg-white" title="Edit appointment" aria-label="Edit appointment">
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3 w-3">
+											<path d="M21.731 2.269a2.625 2.625 0 00-3.712 0L7.5 12.788V16.5h3.712L21.731 5.981a2.625 2.625 0 000-3.712z"/>
+											<path fill-rule="evenodd" d="M5.25 4.5A2.25 2.25 0 003 6.75v10.5A2.25 2.25 0 005.25 19.5h10.5A2.25 2.25 0 0018 17.25V12a.75.75 0 011.5 0v5.25A3.75 3.75 0 0115.75 21H5.25A3.75 3.75 0 011.5 17.25V6.75A3.75 3.75 0 015.25 3h5.25a.75.75 0 010 1.5H5.25z" clip-rule="evenodd"/>
+										</svg>
+									</button>
+									<button onclick={(ev) => { ev.stopPropagation(); confirmAndDeleteAppointment(e.id); }} class="absolute top-1 right-1 rounded p-0.5 text-gray-500 hover:text-red-600 bg-white/70 hover:bg-white" title="Delete appointment" aria-label="Delete appointment">
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3 w-3">
+											<path fill-rule="evenodd" d="M16.5 4.5V6h3a.75.75 0 010 1.5h-.36l-1.03 12.086A2.25 2.25 0 0115.87 21H8.13a2.25 2.25 0 01-2.24-1.414L4.86 7.5H4.5A.75.75 0 014.5 6h3V4.5A1.5 1.5 0 019 3h6a1.5 1.5 0 011.5 1.5zM9 6h6V4.5H9V6zm-.89 12.964A.75.75 0 008.13 19.5h7.74a.75.75 0 00.02-.536L16.84 7.5H7.16l.95 11.464z" clip-rule="evenodd" />
+										</svg>
+									</button>
 									{#if isFiltered && matchesCurrentFilter}
 										<div
 											class="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-500"
