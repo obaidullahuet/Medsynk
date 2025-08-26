@@ -94,13 +94,17 @@ def getDoctorById(id: int, db: Session = Depends(get_db)):
 def updateDoctor(
     id: int,
     updateData:DoctorSchema.DoctorUpdate=Depends(DoctorSchema.doctorUpdateFormDependency),
-    profilePhoto:Union[UploadFile, None, str] = File(None),
+    profilePhoto:UploadFile = File(None),
     db: Session = Depends(get_db),
 ):
     profilePhotoPath = None
-    if profilePhoto and  isinstance(profilePhoto,UploadFile):
+    if profilePhoto :
+        print("---------------------------------------------------")
         profilePhotoPath = saveUploadedFile(profilePhoto)
-    updateData.profilePhoto = profilePhotoPath
+        updateData.profilePhoto = profilePhotoPath
+
+    # print(profilePhoto)
+    # print(profilePhotoPath)
     # experienceDict = None
     # if experience is not None:
     #     try:

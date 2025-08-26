@@ -58,3 +58,11 @@ def delete_appointment(id: int, db: Session = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=404, detail="Appointment not found")
     return {"message": "Appointment deleted successfully"}
+
+@router.get('/doctor/{id}',response_model=AppointmentSchema.PaginatedAppointmentOut)
+def getAppointmentByDoctor(id:int,page:int=1, limit:int=10, db: Session = Depends(get_db)):
+    apptList= AppointmentService.getAppointmentByDoctorId( id,page,limit,db)
+    return {
+        "message": "All Appointments",
+        "data": apptList
+    }

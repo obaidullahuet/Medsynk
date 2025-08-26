@@ -101,14 +101,13 @@ def doctorUpdateFormDependency(
         try:
             parsed_experience = json.loads(experience)
         except Exception:
-            parsed_experience = None
-
+            parsed_experience = None        
     # parsed_treatments = None
-    # if treatmentIds:
-    #     try:
-    #         parsed_treatments = json.loads(treatmentIds)
-    #     except Exception:
-    #         parsed_treatments = None
+    if treatmentIds:
+        try:
+            parsed_treatments = json.loads(treatmentIds)
+        except Exception:
+            parsed_treatments = None
 
     return DoctorBase(   # 🔑 if you have DoctorUpdate schema, use that instead
         name=name,
@@ -119,6 +118,7 @@ def doctorUpdateFormDependency(
         experience=parsed_experience,
         slotDuration=slotDuration,
         treatmentIds=treatmentIds,
+        # treatmentIds=parsed_treatments,
         email=email,
         address=address,
         available=available,

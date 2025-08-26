@@ -2,14 +2,16 @@ from sqlalchemy.orm import Session
 from app.models import User,Role
 from app.schema import auth as UserSchema
 from sqlalchemy.orm import joinedload, load_only
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.utils.passwordUtility import hashPassword,verifyPassword
 import jwt
 import os
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+
 
 
 
@@ -62,19 +64,28 @@ def login(userData:UserSchema.Login,db:Session):
             load_only(User.id, User.firstName, User.lastName, User.email, User.roleId,User.createdAt),
             joinedload(User.role).joinedload(Role.permissions)).filter(User.id == user.id).first()
         userPermission=userObj.role.permissions
-        userPermissions = [permission.name for permission in userPermission]
-        expireTime=datetime.utcnow() + timedelta(hours=1)
-        jwtToken=jwt.encode({
+        userPermissions = [permission.name for permission in userPermission]  
+        
+        
+        expire_minutes =int(ACCESS_TOKEN_EXPIRE_MINUTES)
+        current_time = datetime.now(timezone.utc)
+        expiration_time = current_time + timedelta(minutes=expire_minutes)
+   
+        
+        payload = {
             "userRole": userObj.role.name,
-            "userRoleId":userObj.roleId,
-                             "userPermissions":userPermissions,
-                             "id":userObj.id,
-                             "email":userObj.email,
-                             "firstName":userObj.firstName,
-                             "lastName":userObj.lastName,
-                             "exp":expireTime
-                             
-                             }, SECRET_KEY, algorithm=ALGORITHM)
+            "userRoleId": userObj.roleId,
+            "userPermissions": userPermissions,
+            "id": userObj.id,
+            "email": userObj.email,
+            "firstName": userObj.firstName,
+            "lastName": userObj.lastName,
+            "exp": expiration_time
+        }
+        
+        jwtToken = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        # Instead of manual timestamp conversion:
+        
         return {"data": userObj
                 ,"token":jwtToken
                 }

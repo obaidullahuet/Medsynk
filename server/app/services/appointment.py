@@ -22,7 +22,7 @@ def createAppointmentService(db: Session, appointment_data: AppointmentCreate):
         func.lower(DoctorAvailability.day) == day_name
     ).first()
     if not availability:
-        return {"error":f"Doctor availability not found"}
+        return {"error": "Doctor is not Available "}
 
     # 3. Validate requested time within availability
     requested_time = appointment_data.scheduledTime  # naive time
@@ -118,7 +118,7 @@ def updateAppointmentService(db: Session, appointment_id: int, appointment_data:
         func.lower(DoctorAvailability.day) == day_name
     ).first()
     if not availability:
-        return {"error": "Doctor availability not found"}
+        return {"error": "Doctor is not Available"}
 
     # 4. Validate requested time within availability
     requested_time = appointment_data.scheduledTime
@@ -185,3 +185,21 @@ def getPatientAppointmentList(skip: int, limit: int, db: Session):
         # "totalPages": totalPages,
         "data": allAppointment
     }
+
+
+
+
+def getAppointmentByDoctorId(id:int,page:int,limit:int,db:Session):
+        skip = (page - 1) * limit
+
+        allAppointments=db.query(Appointment).filter(Appointment.doctorId==id).offset(skip).limit(limit).all()
+        totalCount = db.query(Appointment).filter(Appointment.doctorId==id).count()
+        pageNumber = (skip // limit) + 1 if limit else 1
+        totalPages = ceil(totalCount / limit) if limit else 1
+        return {
+        "totalCount": totalCount,
+        "pageNumber": pageNumber,
+        "totalPages": totalPages,
+        "data": allAppointments,
+    }
+   

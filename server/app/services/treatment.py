@@ -4,6 +4,8 @@ from app.schema.treatment import TreatmentCreate, TreatmentUpdate
 from datetime import date
 from math import ceil
 from sqlalchemy.orm import joinedload
+from urllib.parse import unquote
+
 
 # CREATE
 def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
@@ -27,9 +29,14 @@ def createTreatmentService(db: Session, treatmentData: TreatmentCreate):
     return treatment
 
 # READ ALL
-def getAllTreatmentsService(page: int, limit: int,filter: str, db: Session):
+def getAllTreatmentsService(page: int, limit: int,search: str,filter: str, db: Session):
     skip = (page - 1) * limit
-    treatmentList = db.query(Treatment).offset(skip).limit(limit).all()
+    
+    if search and search != '':
+        search=search.split()[0]
+        treatmentList = db.query(Treatment).filter(Treatment.name.ilike(f"%{search}%")).offset(skip).limit(limit).all()
+    else:
+        treatmentList = db.query(Treatment).offset(skip).limit(limit).all()
     totalCount = db.query(Treatment).count()
     pageNumber = (skip // limit) + 1 if limit else 1
     totalPages = ceil(totalCount / limit) if limit else 1

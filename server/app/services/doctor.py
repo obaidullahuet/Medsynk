@@ -3,6 +3,8 @@ from app.schema import doctor as DoctorSchema
 from app.models import Doctor, Treatment
 from sqlalchemy.orm import Session
 from math import ceil
+from sqlalchemy.orm import joinedload
+
 
 
 
@@ -53,7 +55,7 @@ def getDoctorList(page:int,limit:int,db:Session):
 
 #  GET DOCTOR BY ID
 def getDoctorById(doctorId:int,db:Session ):
-    doctorDetail= db.query(Doctor).filter(Doctor.id == doctorId).first()
+    doctorDetail= db.query(Doctor).options(joinedload(Doctor.treatments)).filter(Doctor.id == doctorId).first()
     return doctorDetail
 
 #  UPDATE DOCTOR
@@ -62,7 +64,7 @@ def update_doctor(doctor_id: int, updatedDoctor: DoctorSchema.DoctorUpdate, db: 
         doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
         if not doctor:
             return None  
-
+        
         updateData = updatedDoctor.dict(exclude_unset=True)
 
         # Default slotDuration if not provided
