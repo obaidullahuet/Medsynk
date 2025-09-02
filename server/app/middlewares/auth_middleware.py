@@ -6,13 +6,14 @@ import os
 
 
 
+
 app=FastAPI()
 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-PUBLIC_PATHS=["/api/auth/login","/api/auth/signup","/auth/doctor/register","/auth/doctor/login","/docs","/openapi.json"]
+PUBLIC_PATHS=["/api/auth/login","/api/auth/signup","/auth/doctor/register","/auth/doctor/login","/docs","/openapi.json","/"]
 
 async def jwt_middleware(request:Request,call_next):
 
@@ -55,6 +56,7 @@ async def jwt_middleware(request:Request,call_next):
     except jwt.ExpiredSignatureError:
         print("JWT token has expired")
         return JSONResponse({"error": "Token has expired"}, status_code=401)
+        # return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
     except jwt.InvalidTokenError:
         print("Invalid JWT token")
         return JSONResponse({"error": "Invalid token"}, status_code=401)

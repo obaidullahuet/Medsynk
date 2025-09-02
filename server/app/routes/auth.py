@@ -11,8 +11,9 @@ router=APIRouter(tags=["Signup & Login"])
 
 
 # ========================== POST ==================================
-@router.post('/signup')
+@router.post('/signup', summary="User Signup", description="Create a new user account")
 def addUser(data:UserSchema.CreateUser,db:Session=Depends(get_db)):
+    """Create a new user account with email and password"""
     newUser=UserService.createUser(data, db)
 
     if "error" in newUser:
@@ -23,8 +24,9 @@ def addUser(data:UserSchema.CreateUser,db:Session=Depends(get_db)):
         "data": newUser["data"]
     }
 
-@router.post('/login')
+@router.post('/login', summary="User Login", description="Authenticate user and get access token")  
 def login(data:UserSchema.Login, db:Session=Depends(get_db)):
+    """Authenticate user with email and password, returns access token"""
     user=UserService.login(data, db)
     if "error" in user:
         return {"message": "Error during login", "error": user["error"]}

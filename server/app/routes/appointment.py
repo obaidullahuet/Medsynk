@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from config.database import get_db
 from app.services import appointment as AppointmentService
 from app.schema import appointment as AppointmentSchema
-from typing import List
+from typing import List, Optional
 from app.middlewares.auth_middleware import requirePermission
 
 router = APIRouter(prefix="/appointment", tags=["Appointments"])
@@ -60,8 +60,16 @@ def delete_appointment(id: int, db: Session = Depends(get_db)):
     return {"message": "Appointment deleted successfully"}
 
 @router.get('/doctor/{id}',response_model=AppointmentSchema.PaginatedAppointmentOut)
-def getAppointmentByDoctor(id:int,page:int=1, limit:int=10, db: Session = Depends(get_db)):
-    apptList= AppointmentService.getAppointmentByDoctorId( id,page,limit,db)
+def getAppointmentByDoctor(id:int,date:Optional[str]="",page:int=1, limit:int=10, db: Session = Depends(get_db)):
+    apptList= AppointmentService.getAppointmentByDoctorId( id,date,page,limit,db)
+    return {
+        "message": "All Appointments",
+        "data": apptList
+    }
+
+@router.get('/patient/{id}')
+def getAppointmentByPatient(id:int, filter:Optional[str]="", db: Session = Depends(get_db)):
+    apptList= AppointmentService.getAppointmentByPatientId(id, filter, db)
     return {
         "message": "All Appointments",
         "data": apptList

@@ -86,3 +86,16 @@ def deleteDoctorAvailability(id: int, db: Session = Depends(get_db)):
     return {
         "message": "Doctor availability deleted successfully",
     }
+    
+@router.get('/')
+def getDoctorAvailabilityForDay(doctorId:int,day:str, db: Session = Depends(get_db)):
+    doctorAvailability=DoctorAvailabilityService.getDoctorAvailabilityForDay(doctorId,day, db)
+    if not doctorAvailability:
+        return {
+            "message": "No availability found for this day",
+            # "data": []
+        }
+    return {
+        "message": "Doctor availability retrieved successfully",
+        "data": doctorAvailability
+    }

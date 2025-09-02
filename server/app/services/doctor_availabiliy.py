@@ -93,3 +93,7 @@ def deleteDoctorAvailability(id:int, db:Session):
         db.commit()
         return True
     
+
+def getDoctorAvailabilityForDay(doctorId:int,day:str,db:Session):
+    resposne=db.query(DoctorAvailability).filter(DoctorAvailability.doctorId==doctorId).filter(DoctorAvailability.day==day.lower()).first()
+    return resposne

@@ -13,9 +13,9 @@ router = APIRouter(tags=["Patient"])
 @router.post("/", status_code=status.HTTP_201_CREATED,dependencies=[Depends(requirePermission("patient-create"))])
 def createPatient(patientData:patientSchema.PatientCreate = Depends(patientSchema.patientFormDependency) 
                 #   ,image:UploadFile=File(None),
-                    ,image: Union[UploadFile, None, str] = File(None),
+                    ,image:UploadFile = File(None),
                    db: Session = Depends(get_db)):
-    if image and isinstance(image, UploadFile):
+    if image:
         patientData.image = fileHandler.saveUploadedFile(image)
     else:
         patientData.image = None
@@ -46,11 +46,11 @@ def getPatient(id: int, db: Session = Depends(get_db)):
 
 @router.put("/{id}",dependencies=[Depends(requirePermission("patient-update"))])
 def updatePatient(id: int, patientUpdate: patientSchema.PatientUpdate=Depends(patientSchema.updatePatientDependency)
-                  ,image: Union[UploadFile, None, str] = File(None),
+                  ,image: UploadFile = File(None),
                     db: Session = Depends(get_db)):
-    if image and isinstance(image, UploadFile):
+    if image:
         patientUpdate.image = fileHandler.saveUploadedFile(image)
-
+        
     updatedPatient = patientService.updatePatientService(db, id, patientUpdate)
     return {
         "message": "Patient Updated",

@@ -1,6 +1,7 @@
 from datetime import datetime
+from fastapi import Form
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class BaseMedicalInfo(BaseModel):
@@ -9,11 +10,12 @@ class BaseMedicalInfo(BaseModel):
     bodyTemperature: str
     heartRate: str
     respirationRate: str
+    # file:Optional[str]=None
     bloodPressure: str
     appointmentId:int
-    icdCode:str
-    cptCode:str
-    notes:str
+    icdCode:str=None
+    cptCode:str=None
+    notes: Optional[Dict[str, Any]]=None  # Dict for JSON structure
     
     createdAt: datetime
 
@@ -34,6 +36,35 @@ class MedicalInfoUpdate(BaseModel):
     respirationRate: Optional[str]
     appointmentId:Optional[int]
     bloodPressure: Optional[str]
-    icdCode:Optional[str]
-    cptCode:Optional[str]
+    notes: Optional[Dict[str, Any]]
+    # icdCode:Optional[str]
+    # cptCode:Optional[str]
 
+def MedicalFormDependency(
+    patientId:str=Form(...),
+    bloodGroup: str=Form(...),
+    bodyTemperature: str=Form(...),
+    heartRate: str=Form(...),
+    respirationRate: str=Form(...),
+    bloodPressure: str=Form(...),
+    appointmentId:str=Form(...),
+    # icdCode:str=Form(None),
+    # cptCode:str=Form(None),
+    # notes: Optional[Dict[str, Any]]=Form(None),  # Dict for JSON structure
+    createdAt: datetime=Form(None),
+    
+):
+    return BaseMedicalInfo(
+        patientId=int(patientId),
+        bloodGroup=bloodGroup,
+        bodyTemperature=bodyTemperature,
+        heartRate=heartRate,
+        respirationRate=respirationRate,
+        bloodPressure=bloodPressure,
+        appointmentId=int(appointmentId),
+        # icdCode=icdCode,
+        # cptCode=cptCode,
+        # notes=notes,
+        createdAt=createdAt,
+    )
+    

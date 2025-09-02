@@ -60,17 +60,15 @@ app.add_exception_handler(IntegrityError, handle_integrity_error)
 app.add_exception_handler(HTTPException, custom_http_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
+app.add_middleware(BaseHTTPMiddleware, dispatch=middlewareService.jwt_middleware)
+
+
 # Add CORS middleware first (before other middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # "http://localhost:5173",
-        # "http://127.0.0.1:5173",
-        # "http://localhost:5174",
-        # "http://127.0.0.1:5174",
-        # "http://localhost:3000",
-        # "http://127.0.0.1:3000"
-        '*'
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
     ], 
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"], 
@@ -80,5 +78,4 @@ app.add_middleware(
 )
 
 # Register Routes
-app.add_middleware(BaseHTTPMiddleware, dispatch=middlewareService.jwt_middleware)
 app.include_router(app_router,prefix='/api')

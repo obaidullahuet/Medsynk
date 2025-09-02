@@ -10,3 +10,5 @@ jinja2
 alembic
 PyJWT 
 passlib[argon2]
+requests
+pydub

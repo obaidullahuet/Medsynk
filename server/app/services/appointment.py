@@ -189,10 +189,15 @@ def getPatientAppointmentList(skip: int, limit: int, db: Session):
 
 
 
-def getAppointmentByDoctorId(id:int,page:int,limit:int,db:Session):
+def getAppointmentByDoctorId(id:int,date:str,page:int,limit:int,db:Session):
         skip = (page - 1) * limit
-
-        allAppointments=db.query(Appointment).filter(Appointment.doctorId==id).offset(skip).limit(limit).all()
+        # query=db.query(Appointment)
+        allAppointments=db.query(Appointment).filter(Appointment.doctorId==id)
+        if date and date!="":
+            allAppointments=allAppointments.filter(Appointment.scheduledDate==date)
+            
+        allAppointments=allAppointments.offset(skip).limit(limit).all()
+        
         totalCount = db.query(Appointment).filter(Appointment.doctorId==id).count()
         pageNumber = (skip // limit) + 1 if limit else 1
         totalPages = ceil(totalCount / limit) if limit else 1
@@ -203,3 +208,18 @@ def getAppointmentByDoctorId(id:int,page:int,limit:int,db:Session):
         "data": allAppointments,
     }
    
+
+def getAppointmentByPatientId(id:int,filter,db:Session):
+    try:
+        today=datetime.now().date()
+        patientAppointmentList=db.query(Appointment)
+        if filter and filter!="":
+            patientAppointmentList=patientAppointmentList.options(joinedload(Appointment.treatment)).filter(Appointment.patientId==id, Appointment.status==filter)
+        if filter=="scheduled":
+            patientAppointmentList=patientAppointmentList.filter(Appointment.scheduledDate>today)
+        patientAppointmentList=patientAppointmentList.all()
+        return {"data":patientAppointmentList}
+    except Exception as e:
+        print(e)
+        return {"error": e}
+        

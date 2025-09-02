@@ -4,6 +4,8 @@ from config.database import Base
 from datetime import datetime
 import enum 
 from sqlalchemy import Enum
+from sqlalchemy.dialects.postgresql import JSONB
+
 
 
 
@@ -135,14 +137,14 @@ class PatientMedicalInfo(Base):
 
     id=Column(Integer, primary_key=True, index=True)
     patientId = Column(Integer, ForeignKey("patients.id",ondelete='CASCADE'),nullable=True)
-    bloodGroup = Column(String(5),nullable=True)
-    bodyTemperature = Column(String,nullable=True)
-    heartRate = Column(String,nullable=True)
-    respirationRate = Column(String,nullable=True)
-    bloodPressure = Column(String,nullable=True)
-    icdCode=Column(String,nullable=True)
-    cptCode=Column(String, nullable=True)
-    notes=Column(Text, nullable=True)
+    bloodGroup = Column(String(10),nullable=True)
+    bodyTemperature = Column(String(10),nullable=True)
+    heartRate = Column(String(10),nullable=True)
+    respirationRate = Column(String(10),nullable=True)
+    bloodPressure = Column(String(10),nullable=True)
+    icdCode=Column(String(10),nullable=True)
+    cptCode=Column(String(10), nullable=True)
+    notes=Column(JSONB, nullable=True)
     createdAt=Column(Date)
 
     appointmentId=Column(Integer, ForeignKey("appointments.id",ondelete='CASCADE'),nullable=True )

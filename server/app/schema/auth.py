@@ -9,7 +9,7 @@ class BaseUser(BaseModel):
     lastName: str
     email: EmailStr
     password: str
-    createdAt: datetime
+    createdAt: Optional[datetime] = None
 
 class CreateUser(BaseUser):
     pass

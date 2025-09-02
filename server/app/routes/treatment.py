@@ -55,8 +55,7 @@ def updateTreatment(id: int, update_data: TreatmentSchema.TreatmentUpdate=Depend
     print(update_data)
     if image:
         update_data.image = saveUploadedFile(image)
-    else:
-        update_data.image = None
+        
     updated_treatment = TreatmentService.updateTreatmentService(db, id, update_data)
     if not updated_treatment:
         raise HTTPException(status_code=404, detail="Treatment not found")

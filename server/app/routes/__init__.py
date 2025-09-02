@@ -11,9 +11,9 @@ from app.routes.doctor_availability import router as doctor_availability_router
 from app.routes.role import router as role_router
 from app.routes.permission import router as permission_router
 from app.routes.auth import router as auth_router
+from app.routes.note_taker import router as note_taker_router
 
 router = APIRouter()
-
 
 router.include_router(auth_router, prefix='/auth')
 router.include_router(permission_router,prefix='/permission')
@@ -23,8 +23,7 @@ router.include_router(doctor_router,prefix='/doctor')
 router.include_router(appointment_router)
 router.include_router(patient_medical_info_router, prefix='/patient-medical-info')
 router.include_router(patient_file_router, prefix='/patient-file')
-# router.include_router(reviews_router)
-# router.include_router(medication_router)
 router.include_router(treatment_router)
 router.include_router(doctor_availability_router, prefix='/doctor-availability')
+router.include_router(note_taker_router, prefix='/note-taker')
 
