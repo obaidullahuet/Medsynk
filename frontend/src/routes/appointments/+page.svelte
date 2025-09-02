@@ -6,6 +6,7 @@
 	import { fetchDoctors } from '$lib/api/doctorsApi';
 	import { getPatients } from '$lib/api/patientApi';
 	import { getTreatments } from '$lib/api/treatmentsApi';
+	import toast from 'svelte-french-toast';
 
 	let currentDate = new Date();
 	let searchQuery = '';
@@ -74,6 +75,9 @@
 
 	$: if (browser) {
 		days = getWeekDays(currentDate).slice(0, visibleDaysCount);
+		console.log('📅 Current date:', currentDate);
+		console.log('📅 Generated days:', days);
+		console.log('📅 Days ISO format:', days.map(d => d.iso));
 	}
 
 	const startHour = 8; // 8 AM
@@ -127,7 +131,10 @@
 
 	async function loadAppointments() {
 		try {
+			console.log('🔍 Loading appointments...');
 			const res: any = await fetchAppointments();
+			console.log('📊 Raw API response:', res);
+			
 			let list: any[] = [];
 			if (Array.isArray(res)) {
 				list = res;
@@ -136,6 +143,9 @@
 			} else if (Array.isArray(res?.data)) {
 				list = res.data;
 			}
+
+			console.log('📋 Processed appointments list:', list);
+			console.log('📋 List length:', list.length);
 
 			events = list.map((a: any) => {
 				const timeRaw: string = String(a.scheduledTime || '');
@@ -153,8 +163,11 @@
 					color: pickColor(a?.status)
 				};
 			});
+
+			console.log('🎯 Final events array:', events);
+			console.log('🎯 Events length:', events.length);
 		} catch (err) {
-			console.error('Failed to load appointments', err);
+			console.error('❌ Failed to load appointments', err);
 		}
 	}
 
@@ -167,7 +180,8 @@
 			events = events.filter((ev: any) => ev.id !== appointmentId);
 		} catch (err) {
 			console.error('Failed to delete appointment', err);
-			alert('Failed to delete appointment');
+			// alert('Failed to delete appointment');
+			toast.error('Failed to delete appointment');
 		}
 	}
 
@@ -211,7 +225,8 @@
 			editingEvent = null;
 		} catch (err) {
 			console.error('Failed to update appointment', err);
-			alert('Failed to update appointment');
+			// alert('Failed to update appointment');
+			toast.error('Failed to update appointment');
 		}
 	}
 
@@ -229,6 +244,10 @@
 		if (!dateObj) return [];
 		const targetDate = dateObj.toISOString().split('T')[0];
 
+		console.log('🔍 Filtering events for date:', targetDate);
+		console.log('🔍 Total events available:', events.length);
+		console.log('🔍 Events:', events);
+
 		const filteredEvents = events.filter((e) => {
 			const matchesDate = e.date === targetDate;
 			const matchesDoctor = selectedDoctor === 'All Doctors' || e.doctor === selectedDoctor;
@@ -239,8 +258,12 @@
 				e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				e.room.toLowerCase().includes(searchQuery.toLowerCase());
 
+			console.log(`🔍 Event ${e.id}: date=${e.date}, target=${targetDate}, matchesDate=${matchesDate}, matchesDoctor=${matchesDoctor}, matchesSearch=${matchesSearch}`);
+
 			return matchesDate && matchesDoctor && matchesSearch;
 		});
+
+		console.log('🔍 Filtered events for date:', targetDate, ':', filteredEvents);
 
 		return filteredEvents
 			.map((event) => ({
@@ -268,6 +291,11 @@
 	function goToEditAppointment(id: number | string) {
 		if (!id) return;
 		goto(`/appointments/${id}/edit`);
+	}
+
+	function goToMedicalInfo(id: any) {
+		if (!id) return;
+		goto(`/medical-info?id=${id}`);
 	}
 
 	function goToPreviousWeek() {
@@ -331,7 +359,7 @@
 				<div class="relative">
 					<select
 						onchange={handleMonthChange}
-						class="btn-dropdown-color1 hover:add-text-lg-color1 cursor-pointer appearance-none rounded-full px-3 py-1 text-sm font-semibold outline-none"
+						class="btn-dropdown-color1 hover:add-text-lg-color1 cursor-pointer appearance-none rounded-full px-4 py-2 text-sm font-semibold outline-none w-40"
 					>
 						{#each monthOptions as option, index}
 							<option
@@ -495,7 +523,7 @@
 							{#each filterEventsByDate(d.fullDate) as e, index}
 								{@const isFiltered = searchQuery !== '' || selectedDoctor !== 'All Doctors'}
 								{@const matchesCurrentFilter = isEventMatched(e)}
-								<div
+								<div onclick={() => { goToMedicalInfo(e.id); }}
 									class={`absolute right-1 left-1 cursor-pointer overflow-hidden rounded-lg p-1 text-[10px] break-words shadow-md transition-all duration-300 sm:p-2 sm:text-xs ${e.color}
 								${isFiltered && matchesCurrentFilter ? 'ring-opacity-60 z-10 transform shadow-lg ring-2 ring-blue-400 hover:scale-[1.05] hover:shadow-xl' : 'hover:scale-[1.02] hover:shadow-lg'}
 								${isFiltered && matchesCurrentFilter ? 'animate-pulse-slow' : ''}

@@ -1,5 +1,8 @@
 <script>
+	import { goto } from '$app/navigation';
+	import { Login } from '$lib/api/auth/loginApi';
 	import { createEventDispatcher } from 'svelte';
+	import toast from 'svelte-french-toast';
 
 	const dispatch = createEventDispatcher();
 
@@ -19,12 +22,19 @@
 		return Object.keys(errors).length === 0;
 	}
 
-	function handleLogin(e) {
+	async function handleLogin(e) {
 		e.preventDefault();
 		if (validate()) {
-			successMessage = 'Login successful!';
-			dispatch('login', { email });
-			email = password = '';
+			// successMessage = 'Login successful!';
+			// dispatch('login', { email });
+			const response = await Login({ email, password });
+			if (response && response.data) {
+				email = password = '';
+				toast.success(`${response.message}`);
+				goto('/');
+			} else {
+				toast.error('Password or email is incorrect');
+			}
 		}
 	}
 </script>
@@ -65,7 +75,7 @@
 							type="email"
 							bind:value={email}
 							placeholder="name@company.com"
-							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						/>
 						{#if errors.email}
 							<p class="text-xs text-red-500">{errors.email}</p>
@@ -79,7 +89,7 @@
 							type="password"
 							bind:value={password}
 							placeholder="••••••••"
-							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						/>
 						{#if errors.password}
 							<p class="text-xs text-red-500">{errors.password}</p>
@@ -89,7 +99,7 @@
 					<!-- Submit -->
 					<button
 						type="submit"
-						class="btn-dropdown-color w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none"
+						class="btn-dropdown-color w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
 					>
 						Login
 					</button>

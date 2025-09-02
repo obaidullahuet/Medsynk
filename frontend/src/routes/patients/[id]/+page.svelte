@@ -4,13 +4,48 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { appointment } from '$lib/appointmentsData/appointment';
 	import { deletePatient, fetchPatientById } from '$lib/api/patientApi';
 	import { page } from '$app/stores';
+	import { getPatientMedicalInformation } from '$lib/api/medicalInfo';
+	import { getPatientAppointments } from '$lib/api/appointmentsApi';
+	import Pagination from '../../../components/pagination/Pagination.svelte';
 	let patientData: any = null;
 	let upcomingEvents: any[] = [];
 	let historyEvents: any[] = [];
-	let patientNotes: string = 'No notes available for this patient.';
+	let isLoading: boolean = false;
+	let medicalRecords: any[] = [];
+	let currentPage: number = 1;
+	let totalPages: number = 1;
+	let totalCount: number = 0;
+	let itemsPerPage: number = 1;
+
+	function handlePageChange(event: CustomEvent<number>) {
+		const newPage = event.detail;
+		if (newPage >= 1 && newPage <= totalPages) {
+			currentPage = newPage;
+			loadMedicalRecords();
+		}
+	}
+
+	async function loadMedicalRecords() {
+		try {
+			const idFromUrl = $page.params.id;
+			if (!idFromUrl) return;
+			
+			const medicalRecordList = await getPatientMedicalInformation(parseInt(idFromUrl), currentPage, itemsPerPage);
+			if (medicalRecordList?.data?.data?.length > 0) {
+				medicalRecords = medicalRecordList.data.data;
+				totalPages = medicalRecordList.data.totalPages;
+				totalCount = medicalRecordList.data.totalCount;
+			} else {
+				medicalRecords = [];
+			}
+		} catch (error) {
+			console.error('Error loading medical records:', error);
+			medicalRecords = [];
+		}
+	}
+
 
 	function computeAgeFromDob(dobStr?: string) {
 		if (!dobStr) return 'N/A';
@@ -21,7 +56,7 @@
 		return Math.abs(ageDate.getUTCFullYear() - 1970).toString();
 	}
 
-	function buildPatientDataFromApi(p: any) {
+	function buildPatientDataFromApi(p: any,medicalRecord: any) {
 		const name = p?.name ?? 'Unknown Patient';
 		return {
 			id: p?.id ?? 'N/A',
@@ -39,10 +74,10 @@
 			hpi: p?.medicalRecordNo ?? 'N/A',
 			expiryDate: p?.expiryDate ?? 'N/A',
 			status: p?.status ?? 'Active',
-			bodyTemperature: p?.bodyTemperature ?? 37,
-			heartRate: p?.heartRate ?? 72,
-			bloodPressure: p?.bloodPressure ?? '120/80',
-			respiratory: p?.respiratory ?? 16,
+			bodyTemperature: medicalRecord?.bodyTemperature ?? 37,
+			heartRate: medicalRecord?.heartRate ?? 72,
+			bloodPressure: medicalRecord?.bloodPressure ?? '120/80',
+			respiratory: medicalRecord?.respirationRate ?? 16,
 			allergies: Array.isArray(p?.allergies) ? p.allergies : [],
 			medications: Array.isArray(p?.medications) ? p.medications : [],
 			doctor: p?.doctor?.name ?? (p?.doctor_id ? `Assigned Doctor #${p.doctor_id}` : 'Not Assigned'),
@@ -52,28 +87,12 @@
 
 	//  Get patient data on mount; prefer API by route param, fallback to store
 	onMount(async () => {
+		isLoading = true;
 		const patient = get(selectedPatient);
 		if (patient) {
 			patientData = patient;
 
-			// Filter scheduled events for this patient
-			upcomingEvents = appointment.filter(
-				(ev) => ev.patientId === patient.id && ev.status === 'Scheduled'
-			);
-
-			// Completed & Cancelled events for History
-			historyEvents = appointment.filter(
-				(ev) =>
-					ev.patientId === patient.id && (ev.status === 'Completed' || ev.status === 'Cancelled')
-			);
-
-			//  Extract latest note dynamically (from latest appointment)
-			const patientAppointments = appointment.filter((ev) => ev.patientId === patient.id);
-			if (patientAppointments.length > 0) {
-				// Get last appointment (latest in dataset order)
-				const latestAppointment = patientAppointments[patientAppointments.length - 1];
-				patientNotes = latestAppointment.notes || 'No notes available for this appointment.';
-			}
+					// Note: Appointment data is now fetched from API instead of using hardcoded data
 		}
 
 		try {
@@ -81,12 +100,67 @@
 			if (idFromUrl) {
 				const res = await fetchPatientById(idFromUrl);
 				const apiPatient = res?.data ?? res;
-				if (apiPatient) {
-					patientData = buildPatientDataFromApi(apiPatient);
+				// if (apiPatient) {
+				// 	patientData = buildPatientDataFromApi(apiPatient);
+				// }
+								let medicalRecord: any = null;
+				const medicalRecordList = await getPatientMedicalInformation(parseInt(idFromUrl), currentPage, itemsPerPage);
+				if (medicalRecordList?.data?.data?.length > 0) {
+					medicalRecords = medicalRecordList.data.data;
+					totalPages = medicalRecordList.data.totalPages;
+					totalCount = medicalRecordList.data.totalCount;
+					// First record since it's already in desc order
+					medicalRecord = medicalRecords[0];
 				}
+		if (apiPatient) {
+			patientData = buildPatientDataFromApi(apiPatient, medicalRecord);
+		}
+		const appointments = await getPatientAppointments(parseInt(idFromUrl),'scheduled');
+		console.log(appointments);
+		const rawAppointments = appointments?.data?.data || appointments?.data || appointments || [];
+		
+		// Transform the API data to match the UI expectations
+		upcomingEvents = rawAppointments.map((appointment: any) => ({
+			id: appointment.id,
+			title: appointment.treatment?.name || 'Treatment',
+			date: appointment.scheduledDate,
+			start: appointment.scheduledTime?.slice(0, 5) || appointment.scheduledTime, // Format as HH:MM
+			status: appointment.status,
+			doctor: appointment.doctorId?.name || 'Unknown Doctor',
+			treatment: appointment.treatmentId?.name || 'Treatment'
+		}));
+		
+		// Fetch completed appointments for history
+		const completedAppointments = await getPatientAppointments(parseInt(idFromUrl), 'completed');
+		const rawCompletedAppointments = completedAppointments?.data?.data || completedAppointments?.data || completedAppointments || [];
+		
+		// Transform completed appointments for history
+		historyEvents = rawCompletedAppointments.map((appointment: any) => ({
+			id: appointment.id,
+			title: appointment.treatment?.name || 'Treatment',
+			date: appointment.scheduledDate,
+			start: appointment.scheduledTime?.slice(0, 5) || appointment.scheduledTime, // Format as HH:MM
+			status: appointment.status,
+			doctor: appointment.doctorId?.name || 'Unknown Doctor',
+			treatment: appointment.treatmentId?.name || 'Treatment'
+		}));
+		
+		// Get the latest appointment for notes (combine all appointments and sort by date)
+		const allAppointments = [...rawAppointments, ...rawCompletedAppointments];
+		if (allAppointments.length > 0) {
+			// Sort by date (most recent first) and get the latest
+			const sortedAppointments = allAppointments.sort((a: any, b: any) => 
+				new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()
+			);
+			const latestAppointment = sortedAppointments[0];
+			// Note: We're now using medical records for detailed information instead of appointment notes
+		}
+				
 			}
 		} catch (e) {
 			console.error('Failed to load patient by id', e);
+		} finally {
+			isLoading = false;
 		}
 	});
 
@@ -324,9 +398,9 @@
 								>
 							</div>
 							<div class=" text-xl leading-2 font-bold text-gray-900 lg:text-xl">
-								{patientData.bloodPressure}<span class="text-sm font-normal text-gray-600"
-									>{vitals.bloodPressure.unit}</span
-								>
+								{patientData.bloodPressure}
+								<!-- <span class="text-sm font-normal text-gray-600">{vitals.bloodPressure.unit}</span -->
+								<!-- > -->
 							</div>
 						</div>
 
@@ -339,8 +413,9 @@
 								<span class="font-xs add-text-lg-color text-sm lg:text-lg">Respiratory</span>
 							</div>
 							<div class=" text-xl leading-2 font-bold text-gray-900 lg:text-xl">
-								{patientData.respiratory}<span class="text-sm font-normal text-gray-600"
-									>{vitals.respiratory.unit}</span
+								{patientData.respiratory}
+								<span class="text-sm font-normal text-gray-600"
+									>{ vitals.respiratory.unit}</span
 								>
 							</div>
 						</div>
@@ -490,7 +565,11 @@
 
 						<div class="rounded-2xl bg-white py-2 text-start">
 							<h3 class="text-md mb-2 font-semibold text-gray-900">Upcoming</h3>
-							{#if upcomingEvents.length > 0}
+							{#if isLoading}
+								<div class="flex items-center justify-center p-4">
+									<div class="text-xs text-gray-500">Loading appointments...</div>
+								</div>
+							{:else if upcomingEvents.length > 0}
 								{#each upcomingEvents as event}
 									<div class="space-y-2 rounded-2xl bg-[#f9f5f4] p-2">
 										<div class="flex items-center">
@@ -516,7 +595,11 @@
 					<div class="rounded-2xl bg-white">
 						<h3 class="text-md mb-2 font-semibold text-gray-900">History</h3>
 
-						{#if historyEvents.length > 0}
+						{#if isLoading}
+							<div class="flex items-center justify-center p-4">
+								<div class="text-xs text-gray-500">Loading history...</div>
+							</div>
+						{:else if historyEvents.length > 0}
 							<div class="space-y-3">
 								{#each historyEvents as event}
 									<div class="rounded-2xl bg-[#f9f5f4] p-3">
@@ -547,15 +630,152 @@
 						{/if}
 					</div>
 
-					<div class="rounded-2xl">
-						<h3 class="text-md mb-1 font-medium text-gray-900">Notes</h3>
+										<div class="rounded-2xl">
+						<h3 class="text-md mb-1 font-medium text-gray-900">Medical Records</h3>
 
-						<div class="rounded-2xl bg-[#f9f5f4] p-3 lg:space-y-1 lg:p-3.5 xl:space-y-1 xl:p-3">
-							<div class="text-sm text-gray-500">2028/09/12 - 12:00 PM</div>
-							<p class="text-sm leading-relaxed text-gray-700">
-								{patientNotes}
-							</p>
-						</div>
+						{#if isLoading}
+							<div class="flex items-center justify-center p-4">
+								<div class="text-xs text-gray-500">Loading medical records...</div>
+							</div>
+						{:else if medicalRecords.length > 0}
+							<div class="space-y-3">
+								{#each medicalRecords as record}
+									<div class="rounded-2xl bg-[#f9f5f4] p-3">
+										<div class="flex items-center justify-between mb-2">
+											<div class="text-xs text-gray-500">
+												{new Date(record.createdAt).toLocaleDateString()} - {new Date(record.createdAt).toLocaleTimeString()}
+											</div>
+											<div class="flex items-center text-xs font-medium text-blue-600">
+												<Icon icon="lucide:stethoscope" class="mr-1 h-3 w-3" />
+												Medical Info
+											</div>
+										</div>
+										
+										<!-- Additional Medical Info -->
+										<!-- {#if record.icdCode || record.cptCode}
+											<div class="grid grid-cols-2 gap-2 mb-3">
+												{#if record.icdCode}
+													<div class="bg-white rounded-lg p-2">
+														<div class="flex items-center text-xs text-gray-500">
+															<Icon icon="lucide:file-text" class="mr-1 h-3 w-3" />
+															ICD Code
+														</div>
+														<div class="text-sm font-semibold text-gray-900">{record.icdCode}</div>
+													</div>
+												{/if}
+												{#if record.cptCode}
+													<div class="bg-white rounded-lg p-2">
+														<div class="flex items-center text-xs text-gray-500">
+															<Icon icon="lucide:file-text" class="mr-1 h-3 w-3" />
+															CPT Code
+														</div>
+														<div class="text-sm font-semibold text-gray-900">{record.cptCode}</div>
+													</div>
+												{/if}
+											</div>
+										{/if} -->
+										
+										<!-- Notes Section -->
+										{#if record.notes}
+											<div class="bg-white rounded-lg p-2">
+												<div class="flex items-center text-xs text-gray-500 mb-1">
+													<Icon icon="lucide:file-text" class="mr-1 h-3 w-3" />
+													Notes
+												</div>
+												<div class="text-xs text-gray-700">
+													{#if typeof record.notes === 'object'}
+														{#each Object.entries(record.notes) as [key, value]}
+															{#if key !== 'diagnosis'}
+																<div class="mb-1">
+																	<span class="font-medium">{key}:</span> 
+																	{#if key === 'lab_tests' && Array.isArray(value)}
+																		{#each value as test, index}
+																			{test.test}{index < value.length - 1 ? ', ' : ''}
+																		{/each}
+																	{:else if key === 'prescription' && Array.isArray(value)}
+																		{#each value as med, index}
+																			{med.medicine}{index < value.length - 1 ? ', ' : ''}
+																		{/each}
+																	{:else if Array.isArray(value)}
+																		{#each value as item, index}
+																			{#if typeof item === 'string'}
+																				{item}{index < value.length - 1 ? ', ' : ''}
+																			{:else}
+																				{JSON.stringify(item)}
+																			{/if}
+																		{/each}
+																	{:else}
+																		{value}
+																	{/if}
+																</div>
+															{/if}
+														{/each}
+													{:else}
+														{record.notes}
+													{/if}
+												</div>
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
+							
+							<!-- Pagination Controls -->
+							{#if totalPages > 1}
+								<div class="flex items-center justify-center gap-2 mt-4">
+									<!-- Previous Button -->
+									<button
+										class="btn-dropdown-color1 flex h-8 w-8 items-center justify-center rounded-full text-gray-700 disabled:opacity-40"
+										disabled={currentPage === 1}
+										onclick={() => {
+											if (currentPage > 1) {
+												currentPage = currentPage - 1;
+												loadMedicalRecords();
+											}
+										}}
+									>
+										&lt;
+									</button>
+
+									<!-- Page Numbers -->
+									{#each Array(totalPages).fill(0).map((_, i) => i + 1) as page}
+										<button
+											class={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition ${
+												page === currentPage
+													? 'add-btn-lg-color font-semibold text-white'
+													: 'btn-dropdown-color1 text-gray-700'
+											}`}
+											onclick={() => {
+												if (page !== currentPage) {
+													currentPage = page;
+													loadMedicalRecords();
+												}
+											}}
+										>
+											{page}
+										</button>
+									{/each}
+
+									<!-- Next Button -->
+									<button
+										class="btn-dropdown-color1 flex h-8 w-8 items-center justify-center rounded-full text-gray-700 disabled:opacity-40"
+										disabled={currentPage === totalPages}
+										onclick={() => {
+											if (currentPage < totalPages) {
+												currentPage = currentPage + 1;
+												loadMedicalRecords();
+											}
+										}}
+									>
+										&gt;
+									</button>
+								</div>
+							{/if}
+						{:else}
+							<div class="rounded-2xl bg-[#f9f5f4] p-3">
+								<div class="text-sm text-gray-500">No medical records available for this patient.</div>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>

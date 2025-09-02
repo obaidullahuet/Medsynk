@@ -1,12 +1,23 @@
 <script>
+	import { onMount } from 'svelte';
 	import Header from '../components/nav/header.svelte';
 	import Sidebar from '../components/nav/sidebar.svelte';
 	import Footer from '../components/nav/footer.svelte';
 	import { page } from '$app/stores';
+	import { checkAuth } from '$lib/auth';
 	import '../styles/global.css';
+	import toast, { Toaster } from 'svelte-french-toast';
+	
 	const hiddenRoutes = ['/login', '/signup'];
 	$: currentPath = $page.url.pathname;
 	$: showLayout = !hiddenRoutes.includes(currentPath);
+	
+	// Check authentication for all routes except login and signup
+	onMount(() => {
+		if (!hiddenRoutes.includes(currentPath)) {
+			checkAuth();
+		}
+	});
 </script>
 
 <div class="flex h-screen w-screen flex-col overflow-hidden">
@@ -40,3 +51,4 @@
 		<slot />
 	{/if}
 </div>
+<Toaster />

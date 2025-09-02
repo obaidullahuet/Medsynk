@@ -37,8 +37,10 @@
 	},
 	"dependencies": {
 		"@iconify/svelte": "^5.0.1",
+		"axios": "^1.11.0",
 		"chart.js": "^4.5.0",
 		"flatpickr": "^4.6.13",
-		"quill": "^2.0.3"
+		"quill": "^2.0.3",
+		"svelte-french-toast": "^1.2.0"
 	}
 }

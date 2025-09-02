@@ -1,19 +1,41 @@
-import { env } from '$env/dynamic/public';
+import api from '$lib/api';
 
-// const BASE_URL = 'https://htqfccxh-8000.inc1.devtunnels.ms';
+// export async function getPatients(page = 1, limit = 10) {
+// 	try {
+// 		const res = await api.get(`${BASE_URL}/api/patient/?page=${page}&limit=${limit}`,
+// 			// {
+// 			// 	headers: {
+// 			// 		'Authorization': `Bearer ${tokenValue}`
+// 			// 	}
+// 			// }
+// 		);
+// 		if (!res.ok) {
+// 			throw new Error(`Failed to fetch patients: ${res.status}`);
+// 		}
+// 		return await res.json();
+// 	} catch (err) {
+// 		console.error('Error fetching patients:', err);
+// 		throw err;
+// 	}
+// }
 
 export async function getPatients(page = 1, limit = 10) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/patient/?page=${page}&limit=${limit}`);
-		if (!res.ok) {
-			throw new Error(`Failed to fetch patients: ${res.status}`);
-		}
-		return await res.json();
+		// Axios automatically includes headers & baseURL (from api.js)
+		const res = await api.get(`/api/patient/`, {
+			params: { page, limit }
+		});
+
+		// response body is already in res.data
+		return res.data;
+
 	} catch (err) {
-		console.error('Error fetching patients:', err);
-		throw err;
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg);
 	}
 }
+
 
 export async function getPatientslist() {
 	// try {
@@ -26,65 +48,60 @@ export async function getPatientslist() {
 	// 	console.error('Error fetching patients:', err);
 	// 	throw err;
 	// }
-	const res = await fetch(`${BASE_URL}/api/appointment/`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    if (!res.ok) throw new Error(`Failed to fetch appointments: ${res.status}`);
-    return res.json();
+	try {
+		console.log("hitting wih axios")
+		const res = await api.get(`/api/appointment/`);
+		// if (!res.ok) throw new Error(`Failed to fetch appointments: ${res.status}`);
+		// return res.json();
+		return res.data
+	} catch (err) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg);
+	}
+
 }
 
-const BASE_URL = env.PUBLIC_API_BASE_URL || '';
 
 export async function fetchPatients(page = 1, limit = 10) {
 	try {
 		const skip = Math.max(0, (page - 1) * limit);
-		const res = await fetch(`${BASE_URL}/api/patient/?skip=${skip}&limit=${limit}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
-			}
+		const res = await api.get(`/api/patient/`, {
+			params: { skip, limit }
 		});
-		if (!res.ok) {
-			throw new Error(`Failed to fetch patients: ${res.status}`);
-		}
-		return await res.json();
+		return res.data;
 	} catch (err) {
-		console.error('Error fetching patients:', err);
-		throw err;
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg);
 	}
 }
 
 export async function fetchPatientById(id: number | string) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/patient/${id}`, {
-			method: 'GET',
-			headers: { 'Content-Type': 'application/json' }
-		});
-		if (!res.ok) {
-			throw new Error(`Failed to fetch patient ${id}: ${res.status}`);
-		}
-		return await res.json();
+		const res = await api.get(`/api/patient/${id}`);
+		return res.data
 	} catch (err) {
-		console.error('Error fetching patient by id:', err);
-		throw err;
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg);
 	}
 }
 
 export async function createPatient(formData: FormData) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/patient/`, {
-			method: 'POST',
-			body: formData
+		const res = await api.post("/api/patient/", formData, {
+			headers: {
+				"Content-Type": "multipart/form-data"
+			}
 		});
-		if (!res.ok) {
-			const text = await res.text();
-			throw new Error(`Failed to create patient: ${res.status} ${text}`);
-		}
-		return await res.json();
+
+
+		return res.data;
 	} catch (err) {
-		console.error('Error creating patient:', err);
-		throw err;
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg);
 	}
 }
 
@@ -108,16 +125,19 @@ export async function createPatient(formData: FormData) {
 
 export async function updatePatient(id: number, data: FormData) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/patient/${id}`, {
-			method: 'PUT',
-			body: data
+		const res = await api.put(`/api/patient/${id}`, data, {
+			headers: {
+				"Content-Type": "multipart/form-data"
+			}
 		});
 
-		if (!res.ok) throw new Error(`Failed to update patient with id ${id}`);
-		return await res.json();
-	} catch (error) {
-		console.error(error);
-		throw error;
+		// if (!res.ok) throw new Error(`Failed to update patient with id ${id}`);
+		// return await res.json();
+		return res.data
+	} catch (err) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg)
 	}
 }
 // export async function deletePatient(id: number | string) {
@@ -138,19 +158,19 @@ export async function updatePatient(id: number, data: FormData) {
 
 export async function deletePatient(id: number) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/patient/${id}`, {
-			method: 'DELETE',
-			headers: { 'Content-Type': 'application/json' }
-		});
+		const res = await api.delete(`/api/patient/${id}`);
 
-		if (res.status === 204) {
-			return { success: true };
-		}
+		// if (res.status === 204) {
+		// 	return { success: true };
+		// }
 
-		const data = await res.json().catch(() => ({}));
-		throw new Error(data.message || 'Failed to delete patient');
-	} catch (error) {
-		console.error('Delete error:', error);
-		throw error;
+		// const data = await res.json().catch(() => ({}));
+		// throw new Error(data.message || 'Failed to delete patient');
+		return res.data
+	} catch (err) {
+		console.error('Delete error:', err);
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching patients:", msg);
+		throw new Error(msg)
 	}
 }

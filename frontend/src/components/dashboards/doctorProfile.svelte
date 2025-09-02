@@ -1,26 +1,39 @@
 <script>
 	// import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import { deleteDoctor } from '$lib/api/doctorsApi';
+	import { deleteDoctor, getDoctorAppointments } from '$lib/api/doctorsApi';
 	import { goto } from '$app/navigation';
+	import Pagination from '../pagination/Pagination.svelte';
+	import DeleteModal from '../modals/DeleteModal.svelte';
 	let { doctor } = $props();
 	import { env } from '$env/dynamic/public';
 
-    const BASE_URL = env.PUBLIC_API_BASE_URL || '';
+    const BASE_URL = env.PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 	import { onMount } from 'svelte';
 
-	async function handleDelete() {
-		if (confirm(`Are you sure you want to delete Dr. ${doctor.name}?`)) {
-			try {
-				await deleteDoctor(doctor.id);
-				alert('Doctor deleted successfully!');
-				// Redirect back to the doctor list page
-				goto('/doctors');
-			} catch (error) {
-				console.error(error);
-				alert('Failed to delete doctor.');
-			}
+	function handleDeleteClick() {
+		showDeleteModal = true;
+	}
+
+	async function handleDeleteConfirm() {
+		isDeleting = true;
+		try {
+			await deleteDoctor(doctor.id);
+			// alert('Doctor deleted successfully!');
+			toast.success('Doctor deleted successfully!');
+			goto('/doctors');
+		} catch (error) {
+			console.error(error);
+			// alert('Failed to delete doctor.');
+			toast.error('Failed to delete doctor.');
+		} finally {
+			isDeleting = false;
+			showDeleteModal = false;
 		}
+	}
+
+	function handleDeleteCancel() {
+		showDeleteModal = false;
 	}
 
 		// Edit handler
@@ -32,6 +45,7 @@
 
 
 	import { Chart, registerables } from 'chart.js';
+	import toast from 'svelte-french-toast';
 	Chart.register(...registerables);
 
 	const chartData = [
@@ -60,7 +74,9 @@
 		}
 	];
 
+	// @ts-ignore
 	let chartCanvas;
+	// @ts-ignore
 	let chartInstance;
 
 	onMount(() => {
@@ -86,8 +102,10 @@
 			}
 		};
 
+		// @ts-ignore
 		chartInstance = new Chart(chartCanvas, config);
 
+		// @ts-ignore
 		return () => chartInstance?.destroy();
 	});
 	// Stats
@@ -163,118 +181,149 @@
 			avatar: 'https://randomuser.me/api/portraits/women/65.jpg'
 		}
 	];
-	let showAll = $state(false);
-	const rowsToShow = 5; 
+	// Removed showAll and rowsToShow as we're using pagination now 
 
 	// Patients Table
-	const patients = [
-		{
-			id: 'PB-001',
-			name: 'Sarah Miller',
-			datetime: '2028-09-12, 9:00 AM',
-			treatment: 'Facial Rejuvenation',
-			report: 'Skin improving well',
-			status: 'Completed'
-		},
-		{
-			id: 'PB-008',
-			name: 'Claire Thompson',
-			datetime: '2028-09-14, 10:00 AM',
-			treatment: 'Lip Fillers',
-			report: 'Slight swelling observed',
-			status: 'Scheduled'
-		},
-		{
-			id: 'PB-009',
-			name: 'Ethan Hughes',
-			datetime: '2028-09-15, 2:00 PM',
-			treatment: 'Tattoo Removal',
-			report: 'Healing as expected',
-			status: 'InProgress'
-		},
-		{
-			id: 'PB-010',
-			name: 'Hannah Lee',
-			datetime: '2028-09-16, 11:00 AM',
-			treatment: 'Acne Treatment',
-			report: 'Skin sensitivity noted',
-			status: 'Completed'
-		},
-		{
-			id: 'PB-008',
-			name: 'Claire Thompson',
-			datetime: '2028-09-14, 10:00 AM',
-			treatment: 'Lip Fillers',
-			report: 'Slight swelling observed',
-			status: 'Scheduled'
-		},
-		{
-			id: 'PB-009',
-			name: 'Ethan Hughes',
-			datetime: '2028-09-15, 2:00 PM',
-			treatment: 'Tattoo Removal',
-			report: 'Healing as expected',
-			status: 'InProgress'
-		},
-		{
-			id: 'PB-010',
-			name: 'Hannah Lee',
-			datetime: '2028-09-16, 11:00 AM',
-			treatment: 'Acne Treatment',
-			report: 'Skin sensitivity noted',
-			status: 'Completed'
-		},
-		{
-			id: 'PB-008',
-			name: 'Claire Thompson',
-			datetime: '2028-09-14, 10:00 AM',
-			treatment: 'Lip Fillers',
-			report: 'Slight swelling observed',
-			status: 'Scheduled'
-		},
-		{
-			id: 'PB-009',
-			name: 'Ethan Hughes',
-			datetime: '2028-09-15, 2:00 PM',
-			treatment: 'Tattoo Removal',
-			report: 'Healing as expected',
-			status: 'InProgress'
-		},
-		{
-			id: 'PB-010',
-			name: 'Hannah Lee',
-			datetime: '2028-09-16, 11:00 AM',
-			treatment: 'Acne Treatment',
-			report: 'Skin sensitivity noted',
-			status: 'Completed'
-		},
-		{
-			id: 'PB-008',
-			name: 'Claire Thompson',
-			datetime: '2028-09-14, 10:00 AM',
-			treatment: 'Lip Fillers',
-			report: 'Slight swelling observed',
-			status: 'Scheduled'
-		},
-		{
-			id: 'PB-009',
-			name: 'Ethan Hughes',
-			datetime: '2028-09-15, 2:00 PM',
-			treatment: 'Tattoo Removal',
-			report: 'Healing as expected',
-			status: 'InProgress'
-		},
-		{
-			id: 'PB-010',
-			name: 'Hannah Lee',
-			datetime: '2028-09-16, 11:00 AM',
-			treatment: 'Acne Treatment',
-			report: 'Skin sensitivity noted',
-			status: 'Completed'
+	// const patients = [
+	// 	{
+	// 		id: 'PB-001',
+	// 		name: 'Sarah Miller',
+	// 		datetime: '2028-09-12, 9:00 AM',
+	// 		treatment: 'Facial Rejuvenation',
+	// 		report: 'Skin improving well',
+	// 		status: 'Completed'
+	// 	},
+	// 	{
+	// 		id: 'PB-008',
+	// 		name: 'Claire Thompson',
+	// 		datetime: '2028-09-14, 10:00 AM',
+	// 		treatment: 'Lip Fillers',
+	// 		report: 'Slight swelling observed',
+	// 		status: 'Scheduled'
+	// 	},
+	// 	{
+	// 		id: 'PB-009',
+	// 		name: 'Ethan Hughes',
+	// 		datetime: '2028-09-15, 2:00 PM',
+	// 		treatment: 'Tattoo Removal',
+	// 		report: 'Healing as expected',
+	// 		status: 'InProgress'
+	// 	},
+	// 	{
+	// 		id: 'PB-010',
+	// 		name: 'Hannah Lee',
+	// 		datetime: '2028-09-16, 11:00 AM',
+	// 		treatment: 'Acne Treatment',
+	// 		report: 'Skin sensitivity noted',
+	// 		status: 'Completed'
+	// 	},
+	// 	{
+	// 		id: 'PB-008',
+	// 		name: 'Claire Thompson',
+	// 		datetime: '2028-09-14, 10:00 AM',
+	// 		treatment: 'Lip Fillers',
+	// 		report: 'Slight swelling observed',
+	// 		status: 'Scheduled'
+	// 	},
+	// 	{
+	// 		id: 'PB-009',
+	// 		name: 'Ethan Hughes',
+	// 		datetime: '2028-09-15, 2:00 PM',
+	// 		treatment: 'Tattoo Removal',
+	// 		report: 'Healing as expected',
+	// 		status: 'InProgress'
+	// 	},
+	// 	{
+	// 		id: 'PB-010',
+	// 		name: 'Hannah Lee',
+	// 		datetime: '2028-09-16, 11:00 AM',
+	// 		treatment: 'Acne Treatment',
+	// 		report: 'Skin sensitivity noted',
+	// 		status: 'Completed'
+	// 	},
+	// 	{
+	// 		id: 'PB-008',
+	// 		name: 'Claire Thompson',
+	// 		datetime: '2028-09-14, 10:00 AM',
+	// 		treatment: 'Lip Fillers',
+	// 		report: 'Slight swelling observed',
+	// 		status: 'Scheduled'
+	// 	},
+	// 	{
+	// 		id: 'PB-009',
+	// 		name: 'Ethan Hughes',
+	// 		datetime: '2028-09-15, 2:00 PM',
+	// 		treatment: 'Tattoo Removal',
+	// 		report: 'Healing as expected',
+	// 		status: 'InProgress'
+	// 	},
+	// 	{
+	// 		id: 'PB-010',
+	// 		name: 'Hannah Lee',
+	// 		datetime: '2028-09-16, 11:00 AM',
+	// 		treatment: 'Acne Treatment',
+	// 		report: 'Skin sensitivity noted',
+	// 		status: 'Completed'
+	// 	},
+	// 	{
+	// 		id: 'PB-008',
+	// 		name: 'Claire Thompson',
+	// 		datetime: '2028-09-14, 10:00 AM',
+	// 		treatment: 'Lip Fillers',
+	// 		report: 'Slight swelling observed',
+	// 		status: 'Scheduled'
+	// 	},
+	// 	{
+	// 		id: 'PB-009',
+	// 		name: 'Ethan Hughes',
+	// 		datetime: '2028-09-15, 2:00 PM',
+	// 		treatment: 'Tattoo Removal',
+	// 		report: 'Healing as expected',
+	// 		status: 'InProgress'
+	// 	},
+	// 	{
+	// 		id: 'PB-010',
+	// 		name: 'Hannah Lee',
+	// 		datetime: '2028-09-16, 11:00 AM',
+	// 		treatment: 'Acne Treatment',
+	// 		report: 'Skin sensitivity noted',
+	// 		status: 'Completed'
+	// 	}
+	// ];
+	let patients = $state([]);
+	let currentPage = $state(1);
+	let itemsPerPage = $state(3);
+	let showDeleteModal = $state(false);
+	let isDeleting = $state(false);
+
+	onMount(async () => {
+		try {
+			const appointments = await getDoctorAppointments(doctor.id);
+			patients = appointments.data.data || [];
+			console.log("dataaaaaaaaaaaaaaaaaaaa",patients)
+		} catch (error) {
+			console.error('Failed to fetch doctor appointments:', error);
+			patients = [];
 		}
-	];
+	});
+
 	let showAllReviews = $state(false);
 	const reviewsToShow = 3;
+
+	// Pagination logic
+	const totalItems = $derived(patients.length);
+	const paginatedPatients = $derived(
+		patients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+	);
+
+	function handlePageChange(event) {
+		currentPage = event.detail;
+	}
+
+	function handleItemsPerPageChange(event) {
+		itemsPerPage = event.detail;
+		currentPage = 1;
+	}
 	let currentIndex = $state(0);
 	// Reviews
 	const reviews = [
@@ -370,7 +419,7 @@
 			</button>
 			<button
 				class="rounded-lg bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-red-600 sm:px-4 sm:py-1.5 sm:text-sm"
-				onclick={handleDelete}
+				onclick={handleDeleteClick}
 			>
 				Delete
 			</button>
@@ -419,6 +468,17 @@
 		</div>
 	</div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<DeleteModal
+	isOpen={showDeleteModal}
+	title="Delete Doctor"
+	message="Are you sure you want to delete this doctor? This action cannot be undone."
+	itemName={doctor.name}
+	isLoading={isDeleting}
+	on:confirm={handleDeleteConfirm}
+	on:cancel={handleDeleteCancel}
+/>
 
 
 				<!-- Experiences -->
@@ -531,7 +591,7 @@
 				<div class="lg:col-span-1">
 					<div
 						class="flex flex-col rounded-lg bg-white shadow-sm
-		       lg:sticky lg:top-4 lg:rounded-lg lg:shadow-md"
+		        lg:top-4 lg:rounded-lg lg:shadow-md"
 					>
 						<!-- Header -->
 						<div class="flex-shrink-0 border-b border-gray-100 p-2 sm:p-3 lg:p-2">
@@ -588,15 +648,9 @@
 
 <!-- Patients Table -->
 <div class="w-full overflow-x-auto bg-white p-4 sm:p-6 lg:rounded-2xl lg:p-8 lg:shadow-lg">
-	<!-- Heading + Button Container -->
+	<!-- Heading -->
 	<div class="mb-3 flex items-center justify-between sm:mb-4">
 		<h3 class="text-lg font-bold text-gray-800 sm:text-xl">All Patients</h3>
-		<button
-			onclick={() => (showAll = !showAll)}
-			class="btn-dropdown-color1 rounded-lg px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:py-1.5 sm:text-sm"
-		>
-			{showAll ? "Show Less" : "View All"}
-		</button>
 	</div>
 
 	<div class="overflow-x-auto">
@@ -607,18 +661,16 @@
 					<th class="p-2 sm:p-3">Name</th>
 					<th class="p-2 sm:p-3">Date & Time</th>
 					<th class="p-2 sm:p-3">Treatment</th>
-					<th class="p-2 sm:p-3">Report</th>
 					<th class="p-2 sm:p-3">Status</th>
 				</tr>
 			</thead>
 			<tbody>
-				{#each (showAll ? patients : patients.slice(0, rowsToShow)) as p}
+				{#each paginatedPatients as p}
 					<tr class="border-t border-gray-200 transition hover:bg-gray-50">
 						<td class="p-2 font-medium sm:p-3">{p.id}</td>
-						<td class="p-2 sm:p-3">{p.name}</td>
-						<td class="p-2 text-gray-600 sm:p-3">{p.datetime}</td>
-						<td class="p-2 sm:p-3">{p.treatment}</td>
-						<td class="sm:p-3">{p.report}</td>
+						<td class="p-2 sm:p-3">{p.patientId.name}</td>
+						<td class="p-2 text-gray-600 sm:p-3">{p.scheduledDate}</td>
+						<td class="p-2 sm:p-3">{p.treatmentId.name}</td>
 						<td class="p-2 sm:p-3">
 							<span
 								class="rounded-xl px-1 py-1 text-xs font-medium sm:px-2 {p.status === 'Completed'
@@ -635,6 +687,19 @@
 			</tbody>
 		</table>
 	</div>
+
+	<!-- Pagination -->
+	{#if totalItems > 0}
+		<Pagination
+			{currentPage}
+			{itemsPerPage}
+			{totalItems}
+			on:pageChange={handlePageChange}
+			on:itemsPerPageChange={handleItemsPerPageChange}
+		/>
+	{:else}
+		<p class="py-4 text-center text-gray-500">No patients found.</p>
+	{/if}
 </div>
 		<!-- Reviews -->
 <div>

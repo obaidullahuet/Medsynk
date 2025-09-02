@@ -2,7 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { env } from '$env/dynamic/public';
 
-    const BASE_URL = env.PUBLIC_API_BASE_URL || '';
+    const BASE_URL = env.PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 	let { name, id, specialty, contact,  profilePhoto } = $props();
 	const dispatch = createEventDispatcher();
 

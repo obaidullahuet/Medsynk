@@ -1,5 +1,7 @@
 <script>
+	import { signUp } from '$lib/api/auth/signupApi';
 	import { createEventDispatcher } from 'svelte';
+	import toast, { Toaster } from 'svelte-french-toast';
 
 	const dispatch = createEventDispatcher();
 
@@ -18,13 +20,13 @@
 
 		if (!firstName.trim()) errors.firstName = 'First name is required';
 		if (!lastName.trim()) errors.lastName = 'Last name is required';
-		if (!hospitalName.trim()) errors.hospitalName = 'Hospital name is required';
+		// if (!hospitalName.trim()) errors.hospitalName = 'Hospital name is required';
 
 		if (!email.trim()) errors.email = 'Email is required';
 		else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Enter a valid email';
 
 		if (!password) errors.password = 'Password is required';
-		else if (password.length < 6) errors.password = 'Password must be at least 6 characters';
+		else if (password.length < 8) errors.password = 'Password must be at least 8 characters';
 
 		if (confirmPassword !== password) errors.confirmPassword = 'Passwords do not match';
 
@@ -33,13 +35,51 @@
 		return Object.keys(errors).length === 0;
 	}
 
-	function handleSignup(e) {
+	async function handleSignup(e) {
+		console.log('Button click');
 		e.preventDefault();
-		if (validate()) {
-			successMessage = '🎉 Account created successfully!';
-			dispatch('signup', { firstName, lastName, hospitalName, email });
-			firstName = lastName = hospitalName = email = password = confirmPassword = '';
-			termsAccepted = false;
+
+		// if (!validate()) {
+		// 	// toast.error('Please fix the validation errors and try again');
+		// 	return; // Exit early if validation fails
+		// }
+
+		try {
+			console.log(1);
+			const createdAt = new Date().toISOString();
+			if (!validate()) {
+				// return
+				console.log('a-----');
+			} else {
+				console.log('In elsse');
+				const result = await signUp({
+					firstName,
+					lastName,
+					email,
+					password,
+					createdAt
+				});
+				console.log(2);
+				console.log(result);
+
+				if (result?.data) {
+					// Clear form fields
+					firstName = '';
+					lastName = '';
+					email = '';
+					password = '';
+					confirmPassword = '';
+					termsAccepted = false;
+
+					toast.success('Account Created Successfully');
+				} else {
+					const errorMessage = result?.error || 'Failed to create account';
+					toast.error(errorMessage);
+				}
+			}
+		} catch (error) {
+			console.error('Signup error:', error);
+			toast.error('Network error. Please try again.');
 		}
 	}
 </script>
@@ -81,7 +121,7 @@
 								type="text"
 								bind:value={firstName}
 								placeholder="John"
-								class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+								class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 							/>
 							{#if errors.firstName}
 								<p class="text-xs text-red-500">{errors.firstName}</p>
@@ -94,7 +134,7 @@
 								type="text"
 								bind:value={lastName}
 								placeholder="Doe"
-								class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+								class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 							/>
 							{#if errors.lastName}
 								<p class="text-xs text-red-500">{errors.lastName}</p>
@@ -123,7 +163,7 @@
 							type="email"
 							bind:value={email}
 							placeholder="name@company.com"
-							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						/>
 						{#if errors.email}
 							<p class="text-xs text-red-500">{errors.email}</p>
@@ -137,7 +177,7 @@
 							type="password"
 							bind:value={password}
 							placeholder="••••••••"
-							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						/>
 						{#if errors.password}
 							<p class="text-xs text-red-500">{errors.password}</p>
@@ -151,7 +191,7 @@
 							type="password"
 							bind:value={confirmPassword}
 							placeholder="••••••••"
-							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+							class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						/>
 						{#if errors.confirmPassword}
 							<p class="text-xs text-red-500">{errors.confirmPassword}</p>
@@ -179,7 +219,7 @@
 					<!-- Submit -->
 					<button
 						type="submit"
-						class="btn-dropdown-color w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none"
+						class="btn-dropdown-color w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
 					>
 						Create an account
 					</button>

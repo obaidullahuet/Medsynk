@@ -5,7 +5,28 @@
 	import { addDoctorAvailabilityBulk, type DoctorAvailabilityPayload } from '$lib/api/availabilityApi';
 	import { fetchDoctorAvailability } from '$lib/api/availabilityApi';
 	import { env } from '$env/dynamic/public';
-	const BASE_URL = env.PUBLIC_API_BASE_URL || '';
+	import { getTreatments } from '$lib/api/treatmentsApi';
+	import { toast } from 'svelte-french-toast';
+	import api from '$lib/api';
+	const BASE_URL = env.PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+
+	// Phone number validation function
+	function validatePhoneNumber(phone: string): boolean {
+		// Remove all non-digit characters
+		const cleaned = phone.replace(/\D/g, '');
+		
+		// Check if it's a valid phone number (7-15 digits)
+		if (cleaned.length < 7 || cleaned.length > 15) {
+			return false;
+		}
+		
+		// Check if it contains only digits
+		if (!/^\d+$/.test(cleaned)) {
+			return false;
+		}
+		
+		return true;
+	}
 
 	let { params } = $props<{ params: { id: string } }>();
 	let id = params.id;
@@ -36,6 +57,25 @@
 		return base ? `${base}/${path}` : `/${path}`;
 	}
 	let profileImgSrc = $derived(computeProfileImgSrc(profilePreview));
+
+	// Treatments selection (mirror add doctor)
+	type Treatment = { id: number | string; name: string };
+	let treatmentList = $state<Treatment[]>([]);
+	let treatmentId = $state('');
+	let selectedTreatmentIds = $state<number[]>([]);
+
+	function addSelectedTreatment() {
+		if (!treatmentId) return;
+		const idNum = Number(treatmentId);
+		if (!Number.isNaN(idNum) && !selectedTreatmentIds.includes(idNum)) {
+			selectedTreatmentIds = [...selectedTreatmentIds, idNum];
+		}
+		treatmentId = '';
+	}
+
+	function removeSelectedTreatment(id: number) {
+		selectedTreatmentIds = selectedTreatmentIds.filter((tid) => tid !== id);
+	}
 
 	type TimeSlot = { start: string; end: string };
 	type Availability = Record<string, TimeSlot[]>;
@@ -103,8 +143,14 @@
 			return;
 		}
 		try {
-			const res = await fetchDoctorById(id);
+			const [doctorRes, treatmentRes] = await Promise.all([
+				fetchDoctorById(id),
+				getTreatments(1, 100)
+			]);
+			const res = doctorRes?.data ?? doctorRes;
 			const doctor = res.data ?? res;
+			// set treatments list
+			treatmentList = (treatmentRes?.data ?? treatmentRes ?? []) as Treatment[];
 			name = doctor.name || '';
 			specialty = doctor.specialty || '';
 			contact = doctor.contact || '';
@@ -116,6 +162,12 @@
 			experienceList = Array.isArray(doctor.experience) && doctor.experience.length > 0 ? doctor.experience : [{ role: '', place: '', years: '' }];
 			if (doctor.slotDuration) slotDuration = String(doctor.slotDuration);
 			availability = normalizeAvailability((doctor as any).availability);
+			// init selected treatments from doctor.treatments array
+			if (Array.isArray(doctor.treatments) && doctor.treatments.length > 0) {
+				selectedTreatmentIds = doctor.treatments
+					.map((treatment: any) => Number(treatment.id))
+					.filter((n: number) => !Number.isNaN(n));
+			}
 			// Fallback: fetch availability from dedicated endpoint if not present or empty
 			const isEmpty = dayKeys.every((d) => (availability[d] ?? []).length === 0);
 			if (isEmpty) {
@@ -222,8 +274,14 @@
 	}
 
 	async function handleSubmit() {
-		if (!name || !specialty || !contact || !email || !address) {
-			alert('Please fill all required fields.');
+		if (!name || !specialty || !contact || !email || !address || selectedTreatmentIds.length === 0) {
+			toast.error('Please fill all required fields.');
+			return;
+		}
+
+		// Validate phone number
+		if (!validatePhoneNumber(contact)) {
+			toast.error('Please enter a valid phone number (7-15 digits)');
 			return;
 		}
 
@@ -240,33 +298,24 @@
 			formData.append('about', about || '');
 			formData.append('available', String(available));
 			if (slotDuration) formData.append('slotDuration', String(slotDuration));
-			// Persist weekly availability on the doctor record for reliable prefill
-			formData.append('availability', JSON.stringify(buildAvailabilityObject()));
+			// send treatment ids as comma-separated string, e.g. "1,2,4"
+			formData.append('treatmentIds', selectedTreatmentIds.join(','));
 
 			const updated = await updateDoctor(Number(id), formData);
 			const doctorId: number = updated?.data?.id ?? updated?.id ?? Number(id);
-
-			// Ensure availability is persisted on doctor JSON as well (backend DoctorUpdate expects JSON body)
-			try {
-				await fetch(`${BASE_URL}/api/doctor/${id}`, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ availability: buildAvailabilityObject() })
-				});
-			} catch (e) {
-				console.warn('Failed to update availability JSON on doctor, continuing...', e);
-			}
 
 			const availabilityEntries = buildAvailabilityPayload(doctorId);
 			if (availabilityEntries.length > 0) {
 				await addDoctorAvailabilityBulk(availabilityEntries);
 			}
 
-			alert('Doctor updated successfully!');
+			// alert('Doctor updated successfully!');
+			toast.success('Doctor updated successfully!');
 			goto('/doctors');
 		} catch (e) {
 			console.error(e);
-			alert('Failed to update doctor');
+			// alert('Failed to update doctor');
+			toast.error('Failed to update doctor');
 		} finally {
 			isSubmitting = false;
 		}
@@ -319,7 +368,18 @@
 				<!-- Contact -->
 				<div>
 					<label for="contact" class="block text-sm font-bold text-gray-700 mb-2">Contact *</label>
-					<input id="contact" bind:value={contact} type="text" placeholder="Phone number" class="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-700 focus:border-[#40C0E5] focus:ring-2 focus:ring-[#b2e9f8] shadow-sm transition-all" />
+					<input 
+						id="contact" 
+						bind:value={contact} 
+						type="tel" 
+						placeholder="Phone number (e.g., +1 234 567 8900)" 
+						class="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-700 focus:border-[#40C0E5] focus:ring-2 focus:ring-[#b2e9f8] shadow-sm transition-all" 
+						onblur={() => {
+							if (contact && !validatePhoneNumber(contact)) {
+								toast.error('Please enter a valid phone number (7-15 digits)');
+							}
+						}}
+					/>
 				</div>
 
 				<!-- Email -->
@@ -367,6 +427,44 @@
 							</div>
 						</div>
 					{/each}
+				</div>
+
+				<!-- Treatments -->
+				<div class="space-y-3">
+					<div>
+						<label class="block text-sm font-bold text-gray-700 mb-2" for="treatment-select">Select Treatments *</label>
+						<div class="flex gap-2">
+							<select
+								id="treatment-select"
+								bind:value={treatmentId}
+								class="w-full rounded-2xl border border-gray-300 px-4 py-3 text-gray-700 focus:border-[#40C0E5] focus:ring-2 focus:ring-[#b2e9f8] shadow-sm transition-all"
+							>
+								<option value="">Select a treatment</option>
+								{#each treatmentList as d}
+									<option value={d.id}>{d.name}</option>
+								{/each}
+							</select>
+							<button
+								type="button"
+								onclick={addSelectedTreatment}
+								class="rounded-2xl border border-gray-400 px-4 py-3 text-sm font-semibold hover:bg-gray-100 hover:border-gray-500 transition"
+							>
+								Add
+							</button>
+						</div>
+					</div>
+					{#if selectedTreatmentIds.length > 0}
+						<div class="flex flex-wrap gap-2">
+							{#each selectedTreatmentIds as id}
+								<span class="inline-flex items-center gap-2 rounded-full bg-[#e6f8fd] px-3 py-1 text-sm text-gray-700">
+									{treatmentList.find((t) => Number(t.id) === id)?.name || id}
+									<button type="button" class="text-gray-500 hover:text-gray-700" onclick={() => removeSelectedTreatment(id)}>
+										✕
+									</button>
+								</span>
+							{/each}
+						</div>
+					{/if}
 				</div>
 
 				<!-- About -->

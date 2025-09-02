@@ -1,56 +1,51 @@
 import { env } from '$env/dynamic/public';
+import api from '$lib/api';
 
-const BASE_URL = env.PUBLIC_API_BASE_URL || '';
-// const BASE_URL = 'https://cool-centrally-mosquito.ngrok-free.app';
+// const BASE_URL = env.PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+
 export async function fetchDoctors(page = 1, limit = 10) {
-	try {
+	// try {
 		const skip = Math.max(0, (page - 1) * limit);
-		const res = await fetch(`${BASE_URL}/api/doctor/?skip=${skip}&limit=${limit}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
+		const res = await api.get(`/api/doctor/`, {
+			params: {
+				skip,
+				limit
 			}
 		});
-		if (!res.ok) {
-			throw new Error(`Failed to fetch doctors: ${res.status}`);
-		}
-		return await res.json();
-	} catch (err) {
-		console.error('Error fetching doctors:', err);
-		throw err;
-	}
+		return res.data;
+	// } catch (err: any) {
+		// const msg = err.response?.data?.message || err.message;
+		// console.error("Error fetching doctors:", msg);
+		// throw new Error(msg)
+	// }
 }
 
 export async function fetchDoctorById(id: number | string) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/doctor/${id}`, {
-			method: 'GET',
-			headers: { 'Content-Type': 'application/json' }
+		const res = await api.get(`/api/doctor/${id}`, {
 		});
-		if (!res.ok) {
-			throw new Error(`Failed to fetch doctor ${id}: ${res.status}`);
-		}
-		return await res.json();
-	} catch (err) {
-		console.error('Error fetching doctor by id:', err);
-		throw err;
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching doctor:", msg);
+		throw new Error(msg)
 	}
 }
 
 export async function createDoctor(formData: FormData) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/doctor/`, {
-			method: 'POST',
-			body: formData
-		});
-		if (!res.ok) {
-			const text = await res.text();
-			throw new Error(`Failed to create doctor: ${res.status} ${text}`);
-		}
-		return await res.json();
-	} catch (err) {
-		console.error('Error creating doctor:', err);
-		throw err;
+		const res = await api.post(`/api/doctor/`, formData,
+			{
+				headers: {
+					"Content-Type": "multipart/form-data"
+				}
+			}
+		);
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error creating doctor:", msg);
+		throw new Error(msg)
 	}
 }
 
@@ -74,30 +69,68 @@ export async function createDoctor(formData: FormData) {
 
 export async function updateDoctor(id: number, data: FormData) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/doctor/${id}`, {
-			method: 'PUT',
-			body: data
+		const res = await api.put(`/api/doctor/${id}`, data, {
+			headers: {
+				"Content-Type": "multipart/form-data"
+			}
 		});
-
-		if (!res.ok) throw new Error(`Failed to update treatment with id ${id}`);
-		return await res.json();
-	} catch (error) {
-		console.error(error);
-		throw error;
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error updating doctor:", msg);
+		throw new Error(msg)
 	}
 }
+
 export async function deleteDoctor(id: number | string) {
 	try {
-		const res = await fetch(`${BASE_URL}/api/doctor/${id}`, {
-			method: 'DELETE'
-		});
-		if (!res.ok) {
-			const text = await res.text();
-			throw new Error(`Failed to delete doctor ${id}: ${res.status} ${text}`);
+		const res = await api.delete(`/api/doctor/${id}`);
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error deleting doctor:", msg);
+		throw new Error(msg)
+	}
+}
+
+
+export async function getDoctorAppointments(doctorId: number, date?: string) {
+	try {
+		let res;
+
+		if (date) {
+			res = await api.get(`/api/appointment/doctor/${doctorId}?date=${date}`);
+		} else {
+			res = await api.get(`/api/appointment/doctor/${doctorId}`);
 		}
-		return await res.json();
-	} catch (err) {
-		console.error('Error deleting doctor:', err);
-		throw err;
+
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching doctor appointments:", msg);
+		throw new Error(msg);
+	}
+}
+
+
+export async function getDoctorsForTreatment(treatmentId: number) {
+	try {
+		const res = await api.get(`/api/treatment/doctors/${treatmentId}`);
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching doctors for treatment:", msg);
+		throw new Error(msg)
+	}
+}
+
+export async function getDoctorAvailabilityForDate(doctorId: number, day: string) {
+	try {
+		const res = await api.get(`/api/doctor-availability/?doctorId=${doctorId}&day=${day.trim().toLowerCase()}`);
+		return res.data;
+	} catch (err: any) {
+		const msg = err.response?.data?.message || err.message;
+		console.error("Error fetching doctor availability for date:", msg);
+		throw new Error(msg)
 	}
 }

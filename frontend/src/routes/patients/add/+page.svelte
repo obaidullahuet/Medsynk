@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { createPatient } from '$lib/api/patientApi';
+	import toast from 'svelte-french-toast';
 
     let name = $state('');
     let age = $state('');
@@ -43,7 +44,8 @@
 
     async function handleSubmit() {
         if (!name || !dob || !gender || !email || !phone) {
-            alert('Please fill all required fields.');
+            // alert('Please fill all required fields.');
+            toast.error('Please fill all required fields.');
             return;
         }
 
@@ -63,11 +65,13 @@
             formData.append('createdAt', new Date().toISOString().split("T")[0]);
 
             await createPatient(formData);
-            alert('Patient created successfully');
+            // alert('Patient created successfully');
+            toast.success('Patient created successfully');
             goto('/patients');
         } catch (err) {
             console.error(err);
-            alert('Failed to create patient');
+            // alert('Failed to create patient');
+            toast.error('Failed to create patient');
         } finally {
             isSubmitting = false;
         }

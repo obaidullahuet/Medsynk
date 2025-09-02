@@ -24,13 +24,13 @@
 	let selectedTreatment = '';
 	let selectedDate = '';
 	let currentPage = 1;
-	const itemsPerPage = 6;
+	const itemsPerPage = 5;
 
 	// Fetch patients (from appointments API) when page loads and map to table shape
 	onMount(async () => {
 		try {
 			const res = await getPatientslist();
-			let list = Array.isArray(res) ? res : res?.data?.data ?? res?.data ?? [];
+			let list = Array.isArray(res) ? res : (res?.data?.data ?? res?.data ?? []);
 			patients = list.map((a: any) => {
 				const patientName = a?.patientId?.name ?? 'Unknown';
 				const patientId = a?.patientId?.id ?? a?.id;
@@ -117,13 +117,12 @@
 		on:filterTreatment={handleTreatmentFilter}
 		on:filterDate={handleDateFilter}
 	/>
-	<br>
+	<br />
 
 	{#if totalItems > 0}
 		<PatientsTable patients={paginatedPatients} />
-		
+
 		<Pagination {totalItems} {itemsPerPage} {currentPage} on:pageChange={handlePageChange} />
-		
 	{:else}
 		<p class="py-4 text-center text-gray-500">No patients found for the applied filters.</p>
 	{/if}
