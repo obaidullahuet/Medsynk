@@ -28,6 +28,7 @@
 			// successMessage = 'Login successful!';
 			// dispatch('login', { email });
 			const response = await Login({ email, password });
+			console.log(response);
 			if (response && response.data) {
 				email = password = '';
 				toast.success(`${response.message}`);

@@ -4,6 +4,7 @@
 	import { fetchAppointmentById } from '$lib/api/appointmentsApi';
 	import { createMedicalInfo } from '$lib/api/medicalInfo';
 	import toast from 'svelte-french-toast';
+	import { sendVoiceNotes } from '$lib/api/chatApi';
 	
 	// Get the appointment object from navigation state
 	// $: apptObj = $page.state?.apptObj;
@@ -45,12 +46,103 @@
 	let audioBlob: Blob | null = null;
 	let audioUrl: string | null = null;
 	let audioFile: File | null = null;
+ 
+ 	// Processing state for voice notes
+ 	let isProcessing = false;
+
+	// Validation helpers and computed validity for the Save button
+	function isFilled(value: unknown): boolean {
+		return typeof value === 'string' ? value.trim().length > 0 : value !== null && value !== undefined;
+	}
+
+	$: isFormValid = (() => {
+		// Only require that an audio file has been recorded
+		return !!audioFile;
+	})();
+ 
+ 	// Parsed medical summary for human-readable display
+ 	let medicalSummary:
+ 		| {
+ 					history: string[];
+ 					patient_condition: string;
+ 					symptoms: string[];
+ 					diagnosis: { disease: string; icd_code: string };
+ 					prescription: { medicine: string; dose: string; generic_name: string }[];
+ 					lab_tests: { test: string; cpt_code: string }[];
+ 					additional_advice: string[];
+ 			  }
+ 		| null = null;
+
+	// Helpers to edit array fields in the summary
+	function addListItem(key: 'history' | 'symptoms' | 'prescription' | 'lab_tests' | 'additional_advice') {
+		if (!medicalSummary) return;
+		if (key === 'lab_tests') {
+			// @ts-ignore
+			medicalSummary[key] = [...(medicalSummary[key] || []), { test: '', cpt_code: '' }];
+		} else if (key === 'prescription') {
+			// @ts-ignore
+			medicalSummary[key] = [
+				...(medicalSummary[key] || []),
+				{ medicine: '', dose: '', generic_name: '' }
+			];
+		} else {
+			// @ts-ignore
+			medicalSummary[key] = [...(medicalSummary[key] || []), ''];
+		}
+	}
+
+	function updateListItem(
+		key: 'history' | 'symptoms' | 'prescription' | 'lab_tests' | 'additional_advice',
+		index: number,
+		value: string
+	) {
+		if (!medicalSummary) return;
+		// Only for string arrays
+		if (key === 'lab_tests' || key === 'prescription') return;
+		// @ts-ignore
+		const list: string[] = [...(medicalSummary[key] || [])];
+		list[index] = value;
+		// @ts-ignore
+		medicalSummary[key] = list;
+	}
+
+	function removeListItem(key: 'history' | 'symptoms' | 'prescription' | 'lab_tests' | 'additional_advice', index: number) {
+		if (!medicalSummary) return;
+		// @ts-ignore
+		medicalSummary[key] = (medicalSummary[key] || []).filter((_: any, i: number) => i !== index);
+	}
+
+	function updateLabTestField(index: number, field: 'test' | 'cpt_code', value: string) {
+		if (!medicalSummary) return;
+		const list = [...(medicalSummary.lab_tests || [])];
+		const item = { ...(list[index] || { test: '', cpt_code: '' }) };
+		item[field] = value;
+		list[index] = item;
+		medicalSummary.lab_tests = list;
+	}
+
+	function updatePrescriptionField(
+		index: number,
+		field: 'medicine' | 'dose' | 'generic_name',
+		value: string
+	) {
+		if (!medicalSummary) return;
+		const list = [...(medicalSummary.prescription || [])];
+		const item = { ...(list[index] || { medicine: '', dose: '', generic_name: '' }) };
+		item[field] = value;
+		list[index] = item;
+		medicalSummary.prescription = list;
+	}
 
 	// Blood group options
 	const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 	// Handle form submission
 	async function handleSubmit() {
+		if (!isFormValid) {
+			toast.error('Please record and process audio notes before saving.');
+			return;
+		}
 		isLoading = true;
 		try {
 			const fd = new FormData();
@@ -63,13 +155,21 @@
 			fd.append('appointmentId', String(formData.appointmentId));
 			fd.append('createdAt', new Date().toISOString());
 
-			if (audioFile) {
-				fd.append('audioFile', audioFile);
-			} 
-			else {
-				toast.error('Please record audio notes before submitting.');
-				return;
+			// Include notes JSON from the processed voice result
+			try {
+				const notesPayload = medicalSummary ? JSON.stringify(medicalSummary) : '{}';
+				fd.append('notes', notesPayload);
+			} catch {
+				fd.append('notes', '{}');
 			}
+
+			// if (audioFile) {
+			// 	fd.append('audioFile', audioFile);
+			// } 
+			// else {
+			// 	toast.error('Please record audio notes before submitting.');
+			// 	return;
+			// }
 
 			const response=await createMedicalInfo(fd);
 			console.log(response);
@@ -82,12 +182,62 @@
 
 		} catch (error) {
 			console.error('Failed to submit medical info:', error);
-			toast.error('Failed to submit medical info. Please try again.');
+			let message = 'Failed to submit medical info. Please try again.';
+			try {
+				// @ts-ignore
+				message = error?.response?.data?.message || error?.message || message;
+			} catch {}
+			toast.error(message);
 		} finally {
 			isLoading = false;
 		}
 	}
-
+	
+	// Function to handle process button click
+	async function handleProcessClick() {
+		console.log('hello');
+		if(!audioFile){
+			toast.error('Please record audio notes before submitting.');
+			return;
+		}
+		isProcessing = true;
+		try {
+			// fd.append('audioFile', audioFile);
+			const response=await sendVoiceNotes(audioFile);
+			console.log(response);
+			let parsed: any = response;
+			if (typeof response === 'string') {
+				try {
+					parsed = JSON.parse(response);
+				} catch {}
+			}
+			const summary = parsed?.medical_summary ?? parsed;
+			// Normalize lab_tests to objects if needed
+			if (summary?.lab_tests && Array.isArray(summary.lab_tests)) {
+				const normalized = summary.lab_tests.map((t: any) =>
+					t && typeof t === 'object' ? { test: t.test ?? String(t.test ?? ''), cpt_code: t.cpt_code ?? '' } : { test: String(t ?? ''), cpt_code: '' }
+				);
+				summary.lab_tests = normalized;
+			}
+			// Normalize prescription to objects if needed
+			if (summary?.prescription && Array.isArray(summary.prescription)) {
+				const normalizedRx = summary.prescription.map((p: any) =>
+					p && typeof p === 'object'
+						? {
+							medicine: p.medicine ?? String(p.medicine ?? ''),
+							dose: p.dose ?? '',
+							generic_name: p.generic_name ?? ''
+						}
+						: { medicine: String(p ?? ''), dose: '', generic_name: '' }
+				);
+				summary.prescription = normalizedRx;
+			}
+			medicalSummary = summary ?? null;
+		} finally {
+			isProcessing = false;
+		}
+	}
+	
 	// Audio recording functions
 	async function startRecording() {
 		try {
@@ -138,6 +288,7 @@
 			}
 		};
 	});
+
 </script>
 
 <div class="min-h-screen bg-gray-50 py-8">
@@ -253,9 +404,9 @@
 
 			<!-- Audio Notes Field -->
 			<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-				<label class="block text-sm font-medium text-gray-700 mb-4">
+				<p class="block text-sm font-medium text-gray-700 mb-4">
 					Notes (Audio Recording)
-				</label>
+				</p>
 				
 				<div class="space-y-4">
 					<!-- Recording Controls -->
@@ -310,10 +461,166 @@
 								<source src={audioUrl} type="audio/wav" />
 								Your browser does not support the audio element.
 							</audio>
-						</div>
-					{/if}
+							
+							<!-- Process Button -->
+							<div class="mt-3">
+								<button
+									type="button"
+									on:click={handleProcessClick}
+									disabled={isProcessing}
+									class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+								>
+									{#if isProcessing}
+										<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+									{/if}
+									{isProcessing ? 'Processing...' : 'Process'}
+								</button>
+							</div>
 
-					<!-- Instructions -->
+							{#if medicalSummary}
+					<div class="mt-6 space-y-4">
+						<h4 class="text-md font-semibold text-gray-900">Medical Summary</h4>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div class="bg-white border border-gray-200 rounded-md p-3">
+								<label for="patientCondition" class="text-sm text-gray-500">Patient Condition</label>
+								<input
+									id="patientCondition"
+									type="text"
+									class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+									bind:value={medicalSummary.patient_condition}
+									placeholder="Not specified"
+								/>
+							</div>
+
+							<div class="bg-white border border-gray-200 rounded-md p-3 space-y-2">
+								<p class="text-sm text-gray-500">Diagnosis</p>
+								<input
+									type="text"
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+									bind:value={medicalSummary.diagnosis.disease}
+									placeholder="Disease"
+								/>
+								<input
+									type="text"
+									class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+									bind:value={medicalSummary.diagnosis.icd_code}
+									placeholder="ICD Code"
+								/>
+							</div>
+						</div>
+
+						<div class="bg-white border border-gray-200 rounded-md p-3">
+							<p class="text-sm font-medium text-gray-700 mb-2">History</p>
+							{#each (medicalSummary.history || []) as item, i}
+								<div class="flex items-center gap-2 mb-2">
+									<input
+										type="text"
+										class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={item}
+										on:input={(e: any) => updateListItem('history', i, e.target.value)}
+									/>
+									<button type="button" class="px-2 py-1 text-sm text-white bg-red-600 rounded" on:click={() => removeListItem('history', i)}>Remove</button>
+								</div>
+							{/each}
+							<button type="button" class="mt-1 px-3 py-2 text-sm text-white bg-[#40C0E5] hover:bg-[#00abdb] rounded" on:click={() => addListItem('history')}>Add</button>
+						</div>
+
+						<div class="bg-white border border-gray-200 rounded-md p-3">
+							<p class="text-sm font-medium text-gray-700 mb-2">Symptoms</p>
+							{#each (medicalSummary.symptoms || []) as s, i}
+								<div class="flex items-center gap-2 mb-2">
+									<input
+										type="text"
+										class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={s}
+										on:input={(e: any) => updateListItem('symptoms', i, e.target.value)}
+									/>
+									<button type="button" class="px-2 py-1 text-sm text-white bg-red-600 rounded" on:click={() => removeListItem('symptoms', i)}>Remove</button>
+								</div>
+							{/each}
+							<button type="button" class="mt-1 px-3 py-2 text-sm text-white bg-[#40C0E5] hover:bg-[#00abdb] rounded" on:click={() => addListItem('symptoms')}>Add</button>
+						</div>
+
+						<div class="bg-white border border-gray-200 rounded-md p-3">
+							<p class="text-sm font-medium text-gray-700 mb-2">Prescription</p>
+							{#each (medicalSummary.prescription || []) as rx, i}
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+									<input
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={rx.medicine}
+										placeholder="Medicine"
+										on:input={(e: any) => updatePrescriptionField(i, 'medicine', e.target.value)}
+									/>
+									<input
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={rx.dose}
+										placeholder="Dose"
+										on:input={(e: any) => updatePrescriptionField(i, 'dose', e.target.value)}
+									/>
+									<input
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={rx.generic_name}
+										placeholder="Generic name"
+										on:input={(e: any) => updatePrescriptionField(i, 'generic_name', e.target.value)}
+									/>
+									<div class="md:col-span-3 flex justify-end">
+										<button type="button" class="px-2 py-1 text-sm text-white bg-red-600 rounded" on:click={() => removeListItem('prescription', i)}>Remove</button>
+									</div>
+								</div>
+							{/each}
+							<button type="button" class="mt-1 px-3 py-2 text-sm text-white bg-[#40C0E5] hover:bg-[#00abdb] rounded" on:click={() => addListItem('prescription')}>Add Prescription</button>
+						</div>
+
+						<div class="bg-white border border-gray-200 rounded-md p-3">
+							<p class="text-sm font-medium text-gray-700 mb-2">Lab Tests</p>
+							{#each (medicalSummary.lab_tests || []) as t, i}
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+									<input
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={t.test}
+										placeholder="Test name (e.g., ECG)"
+										on:input={(e: any) => updateLabTestField(i, 'test', e.target.value)}
+									/>
+									<input
+										type="text"
+										class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={t.cpt_code}
+										placeholder="CPT code (e.g., 93000)"
+										on:input={(e: any) => updateLabTestField(i, 'cpt_code', e.target.value)}
+									/>
+									<div class="md:col-span-2 flex justify-end">
+										<button type="button" class="px-2 py-1 text-sm text-white bg-red-600 rounded" on:click={() => removeListItem('lab_tests', i)}>Remove</button>
+									</div>
+								</div>
+							{/each}
+							<button type="button" class="mt-1 px-3 py-2 text-sm text-white bg-[#40C0E5] hover:bg-[#00abdb] rounded" on:click={() => addListItem('lab_tests')}>Add Lab Test</button>
+						</div>
+
+						<div class="bg-white border border-gray-200 rounded-md p-3">
+							<p class="text-sm font-medium text-gray-700 mb-2">Additional Advice</p>
+							{#each (medicalSummary.additional_advice || []) as a, i}
+								<div class="flex items-center gap-2 mb-2">
+									<input
+										type="text"
+										class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#40C0E5] focus:border-[#40C0E5]"
+										value={a}
+										on:input={(e: any) => updateListItem('additional_advice', i, e.target.value)}
+									/>
+									<button type="button" class="px-2 py-1 text-sm text-white bg-red-600 rounded" on:click={() => removeListItem('additional_advice', i)}>Remove</button>
+								</div>
+							{/each}
+							<button type="button" class="mt-1 px-3 py-2 text-sm text-white bg-[#40C0E5] hover:bg-[#00abdb] rounded" on:click={() => addListItem('additional_advice')}>Add</button>
+						</div>
+					</div>
+					{/if}
+					</div>
+					{/if}
+ 
+ 					<!-- Instructions -->
 					<div class="text-sm text-gray-500 bg-blue-50 rounded-lg p-3">
 						<p class="font-medium text-blue-800 mb-1">Instructions:</p>
 						<ul class="list-disc list-inside space-y-1 text-blue-700">
@@ -337,7 +644,7 @@
 				</button>
 				<button
 					type="submit"
-					disabled={isLoading}
+					disabled={!isFormValid || isLoading}
 					class="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#40C0E5] hover:bg-[#00abdb] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#40C0E5] disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
 				>
 					{#if isLoading}

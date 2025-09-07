@@ -11,7 +11,7 @@ router = APIRouter(tags=["Flowise AI"])
 API_URL = "http://localhost:3000/api/v1/prediction/099cbfeb-b30e-4743-99c4-2fb742dc73c7"
 
 @router.post("/chat",)
-async def chat(patientId:int=Form(...),appointmentId:int=Form(...),file: UploadFile = File(...),db: Session = Depends(get_db)):
+async def chat(file: UploadFile = File(...),db: Session = Depends(get_db)):
     audio_bytes = await file.read()
     encoded = base64.b64encode(audio_bytes).decode("utf-8")
     mime_type = file.content_type or "audio/mpeg"
@@ -34,8 +34,8 @@ async def chat(patientId:int=Form(...),appointmentId:int=Form(...),file: UploadF
     # print(extracted_text_dict)
     # summary = schema.MedicalSummary(**extracted_text_dict)
     
-    db.query(PatientMedicalInfo).filter(PatientMedicalInfo.patientId == patientId).filter(PatientMedicalInfo.appointmentId== appointmentId).update({"notes": extracted_text_dict})
-    db.commit()
+    # db.query(PatientMedicalInfo).filter(PatientMedicalInfo.patientId == patientId).filter(PatientMedicalInfo.appointmentId== appointmentId).update({"notes": extracted_text_dict})
+    # db.commit()
     
     
     

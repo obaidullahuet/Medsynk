@@ -2,6 +2,7 @@ from datetime import datetime
 from fastapi import Form
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
+import json
 
 
 class BaseMedicalInfo(BaseModel):
@@ -50,10 +51,13 @@ def MedicalFormDependency(
     appointmentId:str=Form(...),
     # icdCode:str=Form(None),
     # cptCode:str=Form(None),
-    # notes: Optional[Dict[str, Any]]=Form(None),  # Dict for JSON structure
+    # notes: Optional[Dict[str, Any]]=Form(None),
+    notes:str=Form(None),
     createdAt: datetime=Form(None),
     
 ):
+    if notes:
+        notes = json.loads(notes)
     return BaseMedicalInfo(
         patientId=int(patientId),
         bloodGroup=bloodGroup,
@@ -64,7 +68,7 @@ def MedicalFormDependency(
         appointmentId=int(appointmentId),
         # icdCode=icdCode,
         # cptCode=cptCode,
-        # notes=notes,
+        notes=notes,
         createdAt=createdAt,
     )
     

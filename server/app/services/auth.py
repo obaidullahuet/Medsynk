@@ -43,6 +43,7 @@ def createUser(userData:UserSchema.CreateUser,db:Session):
         db.add(newUser)
         db.commit()
         db.refresh(newUser)
+        print("New user created:", newUser)
         return {"data": newUser}
     
     except Exception as e:
@@ -60,18 +61,19 @@ def login(userData:UserSchema.Login,db:Session):
         if not verifyPassword(userData.password, user.password):
             return {"error": "Invalid password"}
         
-        userObj=db.query(User).options(
-            load_only(User.id, User.firstName, User.lastName, User.email, User.roleId,User.createdAt),
-            joinedload(User.role).joinedload(Role.permissions)).filter(User.id == user.id).first()
-        userPermission=userObj.role.permissions
-        userPermissions = [permission.name for permission in userPermission]  
-        
-        
-        expire_minutes =int(ACCESS_TOKEN_EXPIRE_MINUTES)
+        userObj = db.query(User).options(
+            load_only(User.id, User.firstName, User.lastName, User.email, User.roleId, User.createdAt),
+            joinedload(User.role).joinedload(Role.permissions)
+        ).filter(User.id == user.id).first()
+        if not userObj or not userObj.role:
+            return {"error": "User role or permissions not found"}
+        userPermission = userObj.role.permissions
+        userPermissions = [permission.name for permission in userPermission] if userPermission else []
+
+        expire_minutes = int(ACCESS_TOKEN_EXPIRE_MINUTES)
         current_time = datetime.now(timezone.utc)
         expiration_time = current_time + timedelta(minutes=expire_minutes)
-   
-        
+
         payload = {
             "userRole": userObj.role.name,
             "userRoleId": userObj.roleId,
@@ -82,13 +84,9 @@ def login(userData:UserSchema.Login,db:Session):
             "lastName": userObj.lastName,
             "exp": expiration_time
         }
-        
+
         jwtToken = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-        # Instead of manual timestamp conversion:
-        
-        return {"data": userObj
-                ,"token":jwtToken
-                }
+        return {"data": userObj, "token": jwtToken}
     
     except Exception as e:
         print("Error during login:", e)
