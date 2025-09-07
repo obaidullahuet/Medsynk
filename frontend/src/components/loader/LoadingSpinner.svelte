@@ -4,7 +4,7 @@
 
 <div class="flex flex-col items-center justify-center py-16">
 	<!-- Spinner -->
-	<div class="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
+	<div class="h-14 w-14 animate-spin  rounded-full border-4 border-gray-300 border-t-blue-500"></div>
 	
 	<!-- Optional text -->
 	<p class="mt-4 text-lg font-medium text-gray-600">{text}</p>
