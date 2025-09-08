@@ -15,6 +15,6 @@
 		to { transform: rotate(360deg); }
 	}
 	.animate-spin {
-		animation: spin 0.8s linear infinite;
+		animation: spin 0.6s linear infinite;
 	}
 </style>
