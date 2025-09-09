@@ -40,7 +40,7 @@
 		<!-- Left side: Copyright and links -->
 		<div class="flex flex-col items-center sm:flex-row lg:gap-4">
 			<!-- Copyright -->
-			<div class="text-sm text-gray-600">Copyright ©️ 2025 MedSynk</div>
+			<div class="text-sm text-gray-800">Copyright ©️ 2025 MedSynk</div>
 
 			<!-- Footer links -->
 			<div class="flex items-center gap-2 lg:gap-4">
