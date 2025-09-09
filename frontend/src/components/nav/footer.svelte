@@ -45,7 +45,7 @@
 			<!-- Footer links -->
 			<div class="flex items-center gap-2 lg:gap-4">
 				{#each footerLinks as link}
-					<a href={link.href} class="text-sm text-gray-500 transition-colors hover:text-gray-700">
+					<a href={link.href} class="text-md text-gray-500 transition-colors hover:text-gray-700">
 						{link.name}
 					</a>
 				{/each}
