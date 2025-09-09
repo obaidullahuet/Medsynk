@@ -35,7 +35,7 @@
 	];
 </script>
 
-<footer class="gap-2 border-t border-gray-200 bg-[#FFFEFC] px-2 md:p-8">
+<footer class="gap-2 border-t border-gray-100 bg-[#FFFEFC] px-2 md:p-8">
 	<div class="mx-auto flex flex-col items-center justify-between sm:flex-row">
 		<!-- Left side: Copyright and links -->
 		<div class="flex flex-col items-center sm:flex-row lg:gap-6">
