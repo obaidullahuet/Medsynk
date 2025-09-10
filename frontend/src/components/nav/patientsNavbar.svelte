@@ -59,7 +59,7 @@
 	class="flex w-full flex-wrap gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
 >
 	<div class="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-start">
-		<div class="flex w-full items-center gap-2 md:hidden">
+		<div class="flex w-full items-center gap-1 md:hidden">
 			<input
 				type="text"
 				placeholder="Search..."
