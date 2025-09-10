@@ -91,7 +91,7 @@
 					class="ml-1 h-3.5 w-4 md:h-4 md:w-4"
 					fill="none"
 					stroke="currentColor"
-					viewBox="0 0 24 24"
+					viewBox="0 2 24 24"
 				>
 					<path
 						stroke-linecap="round"
