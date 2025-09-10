@@ -63,7 +63,7 @@
 			<input
 				type="text"
 				placeholder="Search..."
-				class="flex-1 rounded-md border px-3 py-1.5 text-sm"
+				class="flex-1 rounded-md border px-2 py-1.5 text-sm"
 				value={searchValue}
 				oninput={handleInput}
 			/>
