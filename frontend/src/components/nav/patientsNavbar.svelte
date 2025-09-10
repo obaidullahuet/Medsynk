@@ -67,7 +67,7 @@
 				value={searchValue}
 				oninput={handleInput}
 			/>
-			<div class="flex gap-1">
+			<div class="flex gap-2">
 				<button class="btn-dropdown-color1 h-7 w-7 rounded-full text-base font-bold">+</button>
 				<button class="btn-dropdown-color1 h-7 w-7 rounded-full text-base font-bold">−</button>
 			</div>
