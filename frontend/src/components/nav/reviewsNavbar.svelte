@@ -57,6 +57,7 @@
 	}
 </script>
 
+<!-- the main headr revuew -->
 <svelte:window onclick={handleClickOutside} />
 
 <div class="w-full py-3 md:py-2">
