@@ -69,7 +69,7 @@
 			/>
 			<div class="flex gap-2">
 				<button class="btn-dropdown-color1 h-7 w-6 rounded-full text-base font-bold">+</button>
-				<button class="btn-dropdown-color1 h-7 w-6 rounded-full text-base font-bold">−</button>
+				<button class="btn-dropdown-color1 h-4 w-6 rounded-full text-base font-bold">−</button>
 			</div>
 		</div>
 
